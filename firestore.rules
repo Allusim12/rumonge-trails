@@ -1,0 +1,147 @@
+/**
+ * Rumonge Cultural Trails: Firestore Security Rules
+ *
+ * CORE PHILOSOPHY:
+ * This ruleset implements a robust security model centered on Authorization Independence and Structural Segregation. 
+ * It ensures that private user data is strictly isolated while public tourism content remains highly 
+ * accessible but protected from unauthorized modification.
+ *
+ * DATA STRUCTURE:
+ * 1. User-Centric Data: Located under `/users/{userId}/...`. Access is restricted to the authenticated 
+ *    user whose UID matches the `{userId}` path parameter.
+ * 2. Public Content: Top-level collections like `wonderAttractions`, `events`, and `accommodations` 
+ *    are publicly readable to provide a seamless guest experience.
+ * 3. Administrative Control: A dedicated `/roles_admin` collection serves as the source of truth for 
+ *    database-wide administrative permissions.
+ * 4. User-Generated Feedback: The `/reviews` collection allows public reading but restricts 
+ *    modifications to the original author.
+ *
+ * KEY SECURITY DECISIONS:
+ * - Denormalization: Ownership IDs (e.g., `userId`) are enforced within document bodies to maintain 
+ *   integrity between the document path and its content.
+ * - Global Admin Role: Admin privileges are determined by the existence of a document in the 
+ *   `/roles_admin` collection, avoiding the complexity of custom claims.
+ * - Rules are NOT Filters: User-scoped paths ensure that 'list' operations only return data 
+ *   belonging to the requester, satisfying the Query Authorization Principle (QAP).
+ * - Prototyping Flexibility: While authorization is strictly enforced, data types and specific 
+ *   schema shapes are not validated to allow for rapid development.
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- GLOBAL HELPER FUNCTIONS ---
+
+    /** @description Checks if the user is authenticated. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the user's UID matches the provided ID. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Checks if the user is an administrator via the roles_admin collection. */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    /** @description Checks if the document exists and the current user is the owner. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    // --- COLLECTION RULES ---
+
+    /**
+     * @description Rules for user profile information.
+     * @path /users/{userId}
+     * @allow (get, list, create, update) if UID matches userId.
+     * @deny (create) if UID does not match userId.
+     * @principle Restricts access to a user's own data tree and enforces path consistency.
+     */
+    match /users/{userId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && resource != null && request.resource.data.id == resource.data.id;
+      allow delete: if false; // Profiles are generally kept or deactivated rather than deleted.
+    }
+
+    /**
+     * @description Database Access Control (DBAC) for administrative roles.
+     * @path /roles_admin/{adminId}
+     * @allow (get) if the user is the admin or another admin. (list, write) if user is an admin.
+     * @deny (write) for non-admin users.
+     * @principle Provides Authorization Independence for global administrative roles.
+     */
+    match /roles_admin/{adminId} {
+      allow get: if isOwner(adminId) || isAdmin();
+      allow list, create, update, delete: if isAdmin();
+    }
+
+    /**
+     * @description Publicly readable tourism content and media assets.
+     * @path /mediaAssets/{id}, /wonderAttractions/{id}, /culturalHeritages/{id}, /events/{id}, /accommodations/{id}, /transportationOptions/{id}, /localCuisineSpots/{id}, /travelTips/{id}
+     * @allow (get, list) for everyone. (create, update, delete) for admins only.
+     * @deny (write) for non-authenticated or non-admin users.
+     * @principle Structural segregation of public content with administrative write control.
+     */
+    match /{collection}/{id} {
+      // Helper for grouping top-level public content
+      function isPublicCollection() {
+        return collection in [
+          "mediaAssets", "wonderAttractions", "culturalHeritages", 
+          "events", "accommodations", "transportationOptions", 
+          "localCuisineSpots", "travelTips"
+        ];
+      }
+
+      allow get, list: if isPublicCollection();
+      allow create, update, delete: if isPublicCollection() && isAdmin();
+    }
+
+    /**
+     * @description User-owned travel itineraries.
+     * @path /users/{userId}/itineraries/{itineraryId}
+     * @allow (get, list, create, update, delete) if user is the owner.
+     * @deny (read/write) if UID does not match path userId.
+     * @principle Enforces document ownership for user-specific subcollections.
+     */
+    match /users/{userId}/itineraries/{itineraryId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description User-owned saved bookmarks/wishlist items.
+     * @path /users/{userId}/savedItems/{savedItemId}
+     * @allow (get, list, create, delete) if user is the owner.
+     * @deny (write) if ownership field is missing or mismatched.
+     * @principle Ensures users can only manage their own personalized bookmarks.
+     */
+    match /users/{userId}/savedItems/{savedItemId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if false; // Saved items are typically created or deleted, not modified.
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Public reviews with owner-only write permissions.
+     * @path /reviews/{reviewId}
+     * @allow (get, list) for everyone. (create, update, delete) for the original author.
+     * @deny (update) if trying to change the author ID.
+     * @principle Uses denormalized ownership fields to secure top-level user-generated content.
+     */
+    match /reviews/{reviewId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId;
+      allow delete: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid;
+    }
+  }
+}
