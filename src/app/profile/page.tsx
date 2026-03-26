@@ -1,24 +1,33 @@
-
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
-import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit } from "firebase/firestore";
+import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
+import { collection, query, orderBy, limit, doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Settings, Heart, Map, Clock, ChevronRight, Sparkles } from "lucide-react";
+import { LogOut, Settings, Heart, Map, Clock, ChevronRight, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { format } from "date-fns";
+import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const { auth } = useAuth();
   const { firestore } = useFirestore();
+  const { toast } = useToast();
   const router = useRouter();
+  const [isPromoting, setIsPromoting] = useState(false);
+
+  const adminDocRef = useMemoFirebase(() => 
+    (firestore && user) ? doc(firestore, "roles_admin", user.uid) : null
+  , [firestore, user?.uid]);
+
+  const { data: adminRole } = useDoc(adminDocRef);
 
   const itinerariesQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -38,10 +47,32 @@ export default function ProfilePage() {
     }
   };
 
+  const handleBecomeAdmin = () => {
+    if (!firestore || !user) return;
+    setIsPromoting(true);
+    
+    // Using setDocumentNonBlocking to follow the pattern
+    const adminRef = doc(firestore, "roles_admin", user.uid);
+    setDocumentNonBlocking(adminRef, {
+      id: user.uid,
+      email: user.email,
+      promotedAt: serverTimestamp(),
+    }, { merge: true });
+    
+    // We assume success for the UI since it's non-blocking
+    setTimeout(() => {
+      setIsPromoting(false);
+      toast({
+        title: "Admin Access Requested",
+        description: "Your administrative permissions are being synchronized.",
+      });
+    }, 1000);
+  };
+
   if (isUserLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-secondary/10">
+        <Loader2 className="animate-spin text-primary w-12 h-12" />
       </div>
     );
   }
@@ -68,8 +99,24 @@ export default function ProfilePage() {
                 </Avatar>
                 <h2 className="font-headline text-2xl font-bold">{user.displayName || "Explorer"}</h2>
                 <p className="text-muted-foreground text-sm mb-6">{user.email}</p>
-                <div className="flex justify-center gap-2">
-                  <Button variant="outline" size="sm" className="rounded-full">
+                <div className="flex flex-col gap-3">
+                  {!adminRole ? (
+                    <Button 
+                      onClick={handleBecomeAdmin} 
+                      disabled={isPromoting}
+                      variant="outline" 
+                      className="rounded-xl border-primary text-primary hover:bg-primary/10"
+                    >
+                      {isPromoting ? <Loader2 className="animate-spin mr-2" size={16} /> : <ShieldCheck size={16} className="mr-2" />}
+                      Grant Admin Access
+                    </Button>
+                  ) : (
+                    <div className="bg-primary/10 text-primary px-4 py-2 rounded-xl flex items-center justify-center gap-2 text-sm font-bold border border-primary/20">
+                      <ShieldCheck size={16} />
+                      Administrator Account
+                    </div>
+                  )}
+                  <Button variant="ghost" size="sm" className="rounded-full">
                     <Settings size={16} className="mr-2" />
                     Edit Profile
                   </Button>
@@ -109,10 +156,13 @@ export default function ProfilePage() {
                   ) : itineraries && itineraries.length > 0 ? (
                     <div className="space-y-4">
                       {itineraries.map((it) => (
-                        <div key={it.id} className="flex items-center justify-between p-4 bg-secondary/20 rounded-xl hover:bg-secondary/40 transition-all cursor-pointer group">
+                        <div 
+                          key={it.id} 
+                          className="flex items-center justify-between p-4 bg-secondary/20 rounded-xl hover:bg-secondary/40 transition-all cursor-pointer group"
+                        >
                           <div className="flex items-center gap-4">
                             <div className="bg-white p-2 rounded-lg shadow-sm">
-                              <Calendar size={20} className="text-primary" />
+                              <Map size={20} className="text-primary" />
                             </div>
                             <div>
                               <h4 className="font-bold group-hover:text-primary transition-colors">{it.name}</h4>
@@ -151,36 +201,10 @@ export default function ProfilePage() {
                 </CardContent>
               </Card>
             </div>
-
-            <Card className="border-none shadow-md bg-white">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Clock size={20} />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 p-4 bg-secondary/20 rounded-xl border border-transparent hover:border-primary/20 transition-all">
-                    <div className="bg-primary/10 p-2 rounded-full text-primary">
-                      <Map size={16} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold">Journey Started</p>
-                      <p className="text-xs text-muted-foreground">You joined the Rumonge Cultural Trails community.</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
       <Footer />
     </main>
   );
-}
-
-function Loader2({ className }: { className?: string }) {
-  return <Sparkles className={cn("animate-pulse", className)} />;
 }
