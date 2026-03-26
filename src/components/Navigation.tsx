@@ -3,8 +3,9 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Compass } from "lucide-react";
+import { Menu, X, Compass, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/firebase";
 
 const NavLinks = [
   { name: "Wonders", href: "/wonders" },
@@ -12,11 +13,13 @@ const NavLinks = [
   { name: "Itinerary", href: "/itinerary" },
   { name: "Events", href: "/events" },
   { name: "Guide", href: "/guide" },
+  { name: "Community", href: "/community" },
 ];
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user } = useUser();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,7 +42,7 @@ export function Navigation() {
             <Compass size={24} />
           </div>
           <span className="font-headline font-bold text-xl tracking-tight text-primary">
-            Rumonge <span className="text-foreground">Trails</span>
+            Rumonge <span className={cn(scrolled ? "text-foreground" : "text-white")}>Trails</span>
           </span>
         </Link>
 
@@ -49,22 +52,34 @@ export function Navigation() {
             <Link
               key={link.name}
               href={link.href}
-              className="font-body font-medium text-foreground/80 hover:text-primary transition-colors text-sm uppercase tracking-wider"
+              className={cn(
+                "font-body font-medium transition-colors text-sm uppercase tracking-wider",
+                scrolled ? "text-foreground/80 hover:text-primary" : "text-white/80 hover:text-white"
+              )}
             >
               {link.name}
             </Link>
           ))}
-          <Link
-            href="/itinerary"
-            className="bg-primary text-primary-foreground px-5 py-2 rounded-full font-bold text-sm hover:bg-primary/90 transition-all"
-          >
-            Plan Trip
-          </Link>
+          {user ? (
+            <Link
+              href="/profile"
+              className="bg-primary text-primary-foreground p-2 rounded-full hover:bg-primary/90 transition-all"
+            >
+              <User size={20} />
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="bg-primary text-primary-foreground px-5 py-2 rounded-full font-bold text-sm hover:bg-primary/90 transition-all"
+            >
+              Login
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Toggle */}
         <button
-          className="md:hidden text-foreground p-2"
+          className={cn("md:hidden p-2", scrolled ? "text-foreground" : "text-white")}
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle menu"
         >
@@ -91,11 +106,11 @@ export function Navigation() {
             </Link>
           ))}
           <Link
-            href="/itinerary"
+            href="/login"
             onClick={() => setIsOpen(false)}
             className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-bold text-lg"
           >
-            Plan Your Journey
+            {user ? "View Profile" : "Login"}
           </Link>
         </div>
       </div>

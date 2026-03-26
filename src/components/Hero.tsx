@@ -3,6 +3,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { ArrowRight, MapPin } from "lucide-react";
 
@@ -11,7 +12,6 @@ export function Hero() {
 
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-      {/* Background Image with subtle parallax feel via CSS */}
       <div className="absolute inset-0 z-0 scale-105">
         <Image
           src={heroImage?.imageUrl || "https://picsum.photos/seed/rumonge1/1920/1080"}
@@ -41,19 +41,19 @@ export function Hero() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-700">
-          <a
-            href="#wonders"
+          <Link
+            href="/wonders"
             className="group flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full font-bold text-lg hover:shadow-xl hover:shadow-primary/20 transition-all hover:scale-105"
           >
             Explore Wonders
             <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-          </a>
-          <a
-            href="#itinerary"
+          </Link>
+          <Link
+            href="/itinerary"
             className="flex items-center gap-2 bg-white/10 backdrop-blur-md text-white border border-white/30 px-8 py-4 rounded-full font-bold text-lg hover:bg-white/20 transition-all"
           >
             Start Planning
-          </a>
+          </Link>
         </div>
       </div>
 
