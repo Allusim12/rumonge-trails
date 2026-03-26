@@ -1,4 +1,7 @@
+
 import { config } from 'dotenv';
 config();
 
 import '@/ai/flows/generate-itinerary.ts';
+import '@/ai/flows/local-guide.ts';
+import '@/ai/flows/kirundi-tts.ts';

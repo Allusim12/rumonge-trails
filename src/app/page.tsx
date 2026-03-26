@@ -6,6 +6,8 @@ import { HeritageSection } from "@/components/HeritageSection";
 import { ItineraryPlanner } from "@/components/ItineraryPlanner";
 import { InfoHub } from "@/components/InfoHub";
 import { Gallery } from "@/components/Gallery";
+import { LanguageGuide } from "@/components/LanguageGuide";
+import { ChatGuide } from "@/components/ChatGuide";
 import { Footer } from "@/components/Footer";
 import { Calendar, Music, TreePalm } from "lucide-react";
 
@@ -47,13 +49,16 @@ export default function Home() {
       {/* AI Planner */}
       <ItineraryPlanner />
 
+      {/* Kirundi Language Guide */}
+      <LanguageGuide />
+
       {/* Dynamic Gallery */}
       <Gallery />
 
       {/* Information Hub */}
       <InfoHub />
 
-      {/* Upcoming Events - Simplified for this iteration */}
+      {/* Upcoming Events */}
       <section id="events" className="py-24 px-6 bg-accent/5">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
@@ -84,6 +89,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Floating AI Local Guide */}
+      <ChatGuide />
 
       <Footer />
     </main>
