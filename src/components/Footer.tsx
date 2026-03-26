@@ -28,13 +28,13 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="font-headline text-xl font-bold mb-6 text-white">Quick Links</h4>
+          <h4 className="font-headline text-xl font-bold mb-6 text-white">Explore</h4>
           <ul className="space-y-4 font-body text-white/70">
-            <li><Link href="#wonders" className="hover:text-primary transition-colors">Natural Wonders</Link></li>
-            <li><Link href="#heritage" className="hover:text-primary transition-colors">Cultural Heritage</Link></li>
-            <li><Link href="#itinerary" className="hover:text-primary transition-colors">AI Itinerary Planner</Link></li>
-            <li><Link href="#events" className="hover:text-primary transition-colors">Festivals Calendar</Link></li>
-            <li><Link href="#guide" className="hover:text-primary transition-colors">Visitor Information</Link></li>
+            <li><Link href="/wonders" className="hover:text-primary transition-colors">Natural Wonders</Link></li>
+            <li><Link href="/heritage" className="hover:text-primary transition-colors">Cultural Heritage</Link></li>
+            <li><Link href="/itinerary" className="hover:text-primary transition-colors">AI Itinerary Planner</Link></li>
+            <li><Link href="/events" className="hover:text-primary transition-colors">Festivals Calendar</Link></li>
+            <li><Link href="/guide" className="hover:text-primary transition-colors">Visitor Guide</Link></li>
           </ul>
         </div>
 

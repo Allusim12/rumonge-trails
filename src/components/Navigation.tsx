@@ -3,15 +3,15 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, MapPin, Compass } from "lucide-react";
+import { Menu, X, Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NavLinks = [
-  { name: "Wonders", href: "#wonders" },
-  { name: "Heritage", href: "#heritage" },
-  { name: "Itinerary", href: "#itinerary" },
-  { name: "Events", href: "#events" },
-  { name: "Guide", href: "#guide" },
+  { name: "Wonders", href: "/wonders" },
+  { name: "Heritage", href: "/heritage" },
+  { name: "Itinerary", href: "/itinerary" },
+  { name: "Events", href: "/events" },
+  { name: "Guide", href: "/guide" },
 ];
 
 export function Navigation() {
@@ -55,7 +55,7 @@ export function Navigation() {
             </Link>
           ))}
           <Link
-            href="#itinerary"
+            href="/itinerary"
             className="bg-primary text-primary-foreground px-5 py-2 rounded-full font-bold text-sm hover:bg-primary/90 transition-all"
           >
             Plan Trip
@@ -91,7 +91,7 @@ export function Navigation() {
             </Link>
           ))}
           <Link
-            href="#itinerary"
+            href="/itinerary"
             onClick={() => setIsOpen(false)}
             className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-bold text-lg"
           >
