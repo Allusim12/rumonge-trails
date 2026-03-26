@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "rumonge-hero",
+      "description": "Aerial view of Lake Tanganyika and Rumonge lush coastline",
+      "imageUrl": "https://picsum.photos/seed/rumonge1/1920/1080",
+      "imageHint": "lake tanganyika coastline"
+    },
+    {
+      "id": "rumonge-beach",
+      "description": "Golden sands and palm trees at a Rumonge beach",
+      "imageUrl": "https://picsum.photos/seed/rumonge2/800/600",
+      "imageHint": "tropical beach palm"
+    },
+    {
+      "id": "burundi-drums",
+      "description": "Traditional Burundian drummers performing",
+      "imageUrl": "https://picsum.photos/seed/drums/800/600",
+      "imageHint": "traditional drummers"
+    },
+    {
+      "id": "fishing-boats",
+      "description": "Fishing boats on Lake Tanganyika at sunset",
+      "imageUrl": "https://picsum.photos/seed/fishing/800/600",
+      "imageHint": "fishing boats sunset"
+    },
+    {
+      "id": "local-market",
+      "description": "Vibrant local market in Rumonge",
+      "imageUrl": "https://picsum.photos/seed/market/800/600",
+      "imageHint": "african market"
+    },
+    {
+      "id": "palm-oil",
+      "description": "Traditional palm oil processing in Rumonge",
+      "imageUrl": "https://picsum.photos/seed/oil/800/600",
+      "imageHint": "traditional craft"
+    },
+    {
+      "id": "cuisine",
+      "description": "Local Burundian fish dish with cassava",
+      "imageUrl": "https://picsum.photos/seed/food/800/600",
+      "imageHint": "local cuisine"
+    },
+    {
+      "id": "nature-trail",
+      "description": "Lush nature trail in the hills of Rumonge",
+      "imageUrl": "https://picsum.photos/seed/nature/800/600",
+      "imageHint": "forest trail"
+    }
+  ]
 }
