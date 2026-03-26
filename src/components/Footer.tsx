@@ -1,9 +1,41 @@
 
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
-import { Compass, Instagram, Twitter, Facebook, Mail, MapPin } from "lucide-react";
+import { Compass, Instagram, Twitter, Facebook, Mail, MapPin, Loader2, CheckCircle } from "lucide-react";
+import { useFirestore } from "@/firebase";
+import { collection, serverTimestamp } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useToast } from "@/hooks/use-toast";
 
 export function Footer() {
+  const { firestore } = useFirestore();
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !firestore) return;
+
+    setIsSubmitting(true);
+    addDocumentNonBlocking(collection(firestore, "newsletter_subscriptions"), {
+      email,
+      subscribedAt: serverTimestamp(),
+    }).then(() => {
+      setIsSubscribed(true);
+      setEmail("");
+      toast({
+        title: "Subscribed!",
+        description: "Welcome to the Rumonge Trails newsletter."
+      });
+    }).finally(() => {
+      setIsSubmitting(false);
+    });
+  };
+
   return (
     <footer className="bg-foreground text-background py-20 px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
@@ -57,24 +89,38 @@ export function Footer() {
           <p className="font-body text-sm text-white/60 mb-6">
             Get monthly updates on events, new discoveries, and travel tips.
           </p>
-          <form className="flex gap-2">
-            <input 
-              type="email" 
-              placeholder="Your email" 
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 w-full focus:outline-none focus:border-primary transition-all"
-            />
-            <button className="bg-primary text-white p-2 rounded-xl hover:bg-primary/90 transition-all">
-              Join
-            </button>
-          </form>
+          {isSubscribed ? (
+            <div className="bg-primary/20 p-4 rounded-xl flex items-center gap-2 text-primary border border-primary/20">
+              <CheckCircle size={20} />
+              <span className="font-bold">You're on the list!</span>
+            </div>
+          ) : (
+            <form onSubmit={handleSubscribe} className="flex gap-2">
+              <input 
+                required
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Your email" 
+                className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 w-full focus:outline-none focus:border-primary transition-all text-white"
+              />
+              <button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-primary text-white p-2 rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center min-w-[50px]"
+              >
+                {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : "Join"}
+              </button>
+            </form>
+          )}
         </div>
       </div>
       
       <div className="max-w-7xl mx-auto border-t border-white/10 mt-20 pt-10 flex flex-col md:flex-row justify-between items-center gap-6 text-white/40 text-sm">
         <p>© 2024 Rumonge Cultural Trails. All rights reserved.</p>
         <div className="flex gap-8">
-          <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+          <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
+          <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
         </div>
       </div>
     </footer>

@@ -1,12 +1,14 @@
 
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Camera, Star } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { MapPin, Camera, Star, Search, Filter } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const wonders = [
   {
@@ -43,7 +45,21 @@ const wonders = [
   }
 ];
 
+const categories = ["All", "Relaxation", "Adventure", "Culture", "Nature"];
+
 export function AttractionsGrid() {
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
+
+  const filteredWonders = useMemo(() => {
+    return wonders.filter(w => {
+      const matchesSearch = w.title.toLowerCase().includes(search.toLowerCase()) || 
+                            w.description.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = activeCategory === "All" || w.category === activeCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [search, activeCategory]);
+
   return (
     <section id="wonders" className="py-24 px-6 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -53,58 +69,93 @@ export function AttractionsGrid() {
               Rumonge's <span className="text-primary italic">Hidden Wonders</span>
             </h2>
             <p className="font-body text-muted-foreground text-lg">
-              From the deep blue of Tanganyika to the golden palm estates, Rumonge offers 
-              unparalleled beauty and authentic experiences.
+              Explore our curated selection of natural and cultural landmarks. 
+              Search or filter to find your next adventure.
             </p>
           </div>
-          <button className="text-primary font-bold hover:underline flex items-center gap-2">
-            View All Attractions <Star size={18} />
-          </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {wonders.map((wonder, index) => {
-            const imgData = PlaceHolderImages.find(img => img.id === wonder.image);
-            return (
-              <Card key={index} className="group border-none shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden bg-background">
-                <div className="relative h-64 overflow-hidden">
-                  <Image
-                    src={imgData?.imageUrl || "https://picsum.photos/seed/placeholder/800/600"}
-                    alt={wonder.title}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    data-ai-hint={imgData?.imageHint}
-                  />
-                  <Badge className="absolute top-4 left-4 bg-white/90 text-primary border-none font-bold">
-                    {wonder.category}
-                  </Badge>
-                  <div className="absolute top-4 right-4 bg-accent/90 text-white p-2 rounded-full">
-                    <Camera size={16} />
-                  </div>
-                </div>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-1 text-primary mb-2">
-                    <MapPin size={14} />
-                    <span className="text-xs font-bold uppercase tracking-wider">{wonder.location}</span>
-                  </div>
-                  <h3 className="font-headline text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-                    {wonder.title}
-                  </h3>
-                  <p className="font-body text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {wonder.description}
-                  </p>
-                  <div className="flex items-center justify-between border-t pt-4">
-                    <div className="flex items-center gap-1">
-                      <Star size={14} className="fill-yellow-500 text-yellow-500" />
-                      <span className="text-sm font-bold">{wonder.rating}</span>
-                    </div>
-                    <button className="text-accent text-sm font-bold hover:underline">Explore More</button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+        {/* Search and Filters */}
+        <div className="flex flex-col md:flex-row gap-4 mb-12 items-center">
+          <div className="relative w-full md:max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <Input 
+              placeholder="Search wonders..." 
+              className="pl-10 rounded-full"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={cn(
+                  "px-4 py-2 rounded-full text-sm font-bold transition-all border",
+                  activeCategory === cat 
+                    ? "bg-primary text-white border-primary" 
+                    : "bg-background text-muted-foreground border-border hover:border-primary/50"
+                )}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {filteredWonders.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {filteredWonders.map((wonder, index) => {
+              const imgData = PlaceHolderImages.find(img => img.id === wonder.image);
+              return (
+                <Card key={index} className="group border-none shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden bg-background">
+                  <div className="relative h-64 overflow-hidden">
+                    <Image
+                      src={imgData?.imageUrl || "https://picsum.photos/seed/placeholder/800/600"}
+                      alt={wonder.title}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                      data-ai-hint={imgData?.imageHint}
+                    />
+                    <Badge className="absolute top-4 left-4 bg-white/90 text-primary border-none font-bold">
+                      {wonder.category}
+                    </Badge>
+                  </div>
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-1 text-primary mb-2">
+                      <MapPin size={14} />
+                      <span className="text-xs font-bold uppercase tracking-wider">{wonder.location}</span>
+                    </div>
+                    <h3 className="font-headline text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+                      {wonder.title}
+                    </h3>
+                    <p className="font-body text-sm text-muted-foreground mb-4 line-clamp-2">
+                      {wonder.description}
+                    </p>
+                    <div className="flex items-center justify-between border-t pt-4">
+                      <div className="flex items-center gap-1">
+                        <Star size={14} className="fill-yellow-500 text-yellow-500" />
+                        <span className="text-sm font-bold">{wonder.rating}</span>
+                      </div>
+                      <button className="text-accent text-sm font-bold hover:underline">Explore More</button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-20 bg-secondary/10 rounded-3xl border-2 border-dashed border-secondary/30">
+            <p className="text-muted-foreground text-lg">No wonders match your current search or filter.</p>
+            <button 
+              onClick={() => { setSearch(""); setActiveCategory("All"); }}
+              className="mt-4 text-primary font-bold hover:underline"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

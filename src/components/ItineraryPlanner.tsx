@@ -8,11 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Sparkles, Loader2, Calendar, Map, CheckCircle2 } from "lucide-react";
+import { Sparkles, Loader2, Calendar, Map, CheckCircle2, Save, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUser, useFirestore } from "@/firebase";
+import { collection, serverTimestamp } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useToast } from "@/hooks/use-toast";
 
 export function ItineraryPlanner() {
+  const { user } = useUser();
+  const { firestore } = useFirestore();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [result, setResult] = useState<GenerateItineraryOutput | null>(null);
   const [formData, setFormData] = useState({
     interests: "",
@@ -23,6 +31,7 @@ export function ItineraryPlanner() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setResult(null);
     try {
       const data = await generateItinerary({
         interests: formData.interests || "nature, culture",
@@ -32,9 +41,47 @@ export function ItineraryPlanner() {
       setResult(data);
     } catch (error) {
       console.error("Failed to generate itinerary", error);
+      toast({
+        variant: "destructive",
+        title: "Generation Failed",
+        description: "We couldn't craft your itinerary. Please try again."
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveItinerary = () => {
+    if (!user || !result || !firestore) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to save your itineraries."
+      });
+      return;
+    }
+
+    setSaving(true);
+    const itinerariesRef = collection(firestore, "users", user.uid, "itineraries");
+    
+    addDocumentNonBlocking(itinerariesRef, {
+      userId: user.uid,
+      name: `My ${formData.days}-Day ${formData.pace} Trip`,
+      description: result.summary,
+      isGeneratedByAI: true,
+      preferencesUsed: formData.interests.split(",").map(i => i.trim()),
+      lengthOfStayDays: formData.days,
+      items: result.itinerary.flatMap(d => d.activities),
+      fullData: result,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }).then(() => {
+      toast({
+        title: "Itinerary Saved!",
+        description: "You can find this in your profile journey.",
+      });
+    }).finally(() => {
+      setSaving(false);
+    });
   };
 
   return (
@@ -132,9 +179,19 @@ export function ItineraryPlanner() {
             {result ? (
               <div className="animate-in fade-in slide-in-from-right-8 duration-700">
                 <Card className="border-none shadow-xl bg-white overflow-hidden">
-                  <div className="bg-primary p-6 text-primary-foreground">
-                    <h3 className="font-headline text-3xl font-bold mb-2">Rumonge Adventure Awaits</h3>
-                    <p className="opacity-90 leading-relaxed font-body italic text-lg">{result.summary}</p>
+                  <div className="bg-primary p-6 text-primary-foreground flex justify-between items-start">
+                    <div className="max-w-[70%]">
+                      <h3 className="font-headline text-3xl font-bold mb-2">Rumonge Adventure Awaits</h3>
+                      <p className="opacity-90 leading-relaxed font-body italic text-lg">{result.summary}</p>
+                    </div>
+                    <Button 
+                      onClick={handleSaveItinerary} 
+                      disabled={saving}
+                      className="bg-white text-primary hover:bg-white/90 rounded-full font-bold flex gap-2"
+                    >
+                      {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                      Save Plan
+                    </Button>
                   </div>
                   <CardContent className="p-8">
                     <div className="space-y-10">
@@ -157,10 +214,6 @@ export function ItineraryPlanner() {
                           </div>
                         </div>
                       ))}
-                    </div>
-                    <div className="mt-12 flex justify-center gap-4">
-                      <Button variant="outline" className="rounded-xl">Download PDF</Button>
-                      <Button className="rounded-xl">Save to Favorites</Button>
                     </div>
                   </CardContent>
                 </Card>
