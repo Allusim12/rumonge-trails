@@ -11,6 +11,7 @@ import { doc } from "firebase/firestore";
 const NavLinks = [
   { name: "Wonders", href: "/wonders" },
   { name: "Heritage", href: "/heritage" },
+  { name: "Stays", href: "/stays" },
   { name: "Itinerary", href: "/itinerary" },
   { name: "Events", href: "/events" },
   { name: "Guide", href: "/guide" },

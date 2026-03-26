@@ -47,6 +47,30 @@
       "description": "Lush nature trail in the hills of Rumonge",
       "imageUrl": "https://picsum.photos/seed/nature/800/600",
       "imageHint": "forest trail"
+    },
+    {
+      "id": "hotel-niyibituronsa",
+      "description": "Exterior of Hotel Niyibituronsa in Rumonge",
+      "imageUrl": "https://picsum.photos/seed/hotel1/800/600",
+      "imageHint": "modern hotel building"
+    },
+    {
+      "id": "hotel-sunrise",
+      "description": "Sunrise Hotel with lakeside views",
+      "imageUrl": "https://picsum.photos/seed/hotel2/800/600",
+      "imageHint": "lakeside resort"
+    },
+    {
+      "id": "hotel-eden",
+      "description": "Garden view at Eden Hotel",
+      "imageUrl": "https://picsum.photos/seed/hotel3/800/600",
+      "imageHint": "tropical garden hotel"
+    },
+    {
+      "id": "hotel-mawimbi",
+      "description": "Mawimbi Hotel near the shore",
+      "imageUrl": "https://picsum.photos/seed/hotel4/800/600",
+      "imageHint": "beachfront hotel"
     }
   ]
 }
