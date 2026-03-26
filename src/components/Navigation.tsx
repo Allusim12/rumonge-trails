@@ -3,9 +3,10 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Compass, User } from "lucide-react";
+import { Menu, X, Compass, User, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 const NavLinks = [
   { name: "Wonders", href: "/wonders" },
@@ -20,6 +21,13 @@ export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user } = useUser();
+  const { firestore } = useFirestore();
+
+  const adminDocRef = useMemoFirebase(() => 
+    (firestore && user) ? doc(firestore, "roles_admin", user.uid) : null
+  , [firestore, user?.uid]);
+
+  const { data: adminRole } = useDoc(adminDocRef);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -60,21 +68,38 @@ export function Navigation() {
               {link.name}
             </Link>
           ))}
-          {user ? (
-            <Link
-              href="/profile"
-              className="bg-primary text-primary-foreground p-2 rounded-full hover:bg-primary/90 transition-all"
-            >
-              <User size={20} />
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="bg-primary text-primary-foreground px-5 py-2 rounded-full font-bold text-sm hover:bg-primary/90 transition-all"
-            >
-              Login
-            </Link>
-          )}
+          
+          <div className="flex items-center gap-3 border-l pl-8 ml-4 border-muted/30">
+            {adminRole && (
+              <Link
+                href="/admin"
+                className={cn(
+                  "p-2 rounded-full transition-all flex items-center gap-2 font-bold text-xs uppercase tracking-widest",
+                  scrolled ? "text-primary hover:bg-primary/10" : "text-white hover:bg-white/10"
+                )}
+                title="Admin Dashboard"
+              >
+                <ShieldCheck size={20} />
+                <span className="hidden lg:inline">Admin</span>
+              </Link>
+            )}
+
+            {user ? (
+              <Link
+                href="/profile"
+                className="bg-primary text-primary-foreground p-2 rounded-full hover:bg-primary/90 transition-all shadow-md"
+              >
+                <User size={20} />
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-primary text-primary-foreground px-5 py-2 rounded-full font-bold text-sm hover:bg-primary/90 transition-all shadow-md"
+              >
+                Login
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -94,7 +119,7 @@ export function Navigation() {
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
-        <div className="flex flex-col items-center justify-center h-full gap-8">
+        <div className="flex flex-col items-center justify-center h-full gap-6">
           {NavLinks.map((link) => (
             <Link
               key={link.name}
@@ -105,10 +130,21 @@ export function Navigation() {
               {link.name}
             </Link>
           ))}
+          
+          {adminRole && (
+            <Link
+              href="/admin"
+              onClick={() => setIsOpen(false)}
+              className="text-primary font-bold flex items-center gap-2 text-xl"
+            >
+              <ShieldCheck size={24} /> Admin Console
+            </Link>
+          )}
+
           <Link
-            href="/login"
+            href={user ? "/profile" : "/login"}
             onClick={() => setIsOpen(false)}
-            className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-bold text-lg"
+            className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-bold text-lg shadow-lg"
           >
             {user ? "View Profile" : "Login"}
           </Link>
