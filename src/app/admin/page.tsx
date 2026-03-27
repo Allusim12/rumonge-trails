@@ -8,20 +8,45 @@ import { doc } from "firebase/firestore";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { EntityManagement } from "@/components/admin/EntityManagement";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, ShieldAlert, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, ShieldAlert, Lock, Database, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { seedInitialData } from "@/lib/seed-data";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("wonderAttractions");
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const adminDocRef = useMemoFirebase(() => 
     (firestore && user) ? doc(firestore, "roles_admin", user.uid) : null
   , [firestore, user?.uid]);
 
   const { data: adminRole, isLoading: isAdminLoading } = useDoc(adminDocRef);
+
+  const handleSeedData = async () => {
+    if (!firestore) return;
+    setIsSeeding(true);
+    try {
+      await seedInitialData(firestore);
+      toast({
+        title: "Database Seeded!",
+        description: "Initial Rumonge content has been added to your database.",
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Seed Failed",
+        description: "There was an error populating the database."
+      });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   if (isUserLoading || isAdminLoading) {
     return (
@@ -70,6 +95,26 @@ export default function AdminPage() {
         {/* Admin Sidebar */}
         <aside className="w-full lg:w-64 shrink-0">
           <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+          
+          <Card className="mt-6 border-primary/20 bg-primary/5">
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest">
+                <Database size={14} />
+                Database Tools
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Push all hardcoded Rumonge features into Firestore to make them editable.
+              </p>
+              <Button 
+                onClick={handleSeedData} 
+                disabled={isSeeding}
+                variant="outline" 
+                className="w-full h-10 rounded-xl text-xs font-bold border-primary text-primary hover:bg-primary/10"
+              >
+                {isSeeding ? <Loader2 className="animate-spin" /> : <><Sparkles size={14} className="mr-2" /> Seed Initial Data</>}
+              </Button>
+            </CardContent>
+          </Card>
         </aside>
 
         {/* Management Area */}

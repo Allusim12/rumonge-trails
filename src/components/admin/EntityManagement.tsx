@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -10,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Edit2, X, Save, Search, Loader2 } from "lucide-react";
+import { Plus, Trash2, Edit2, X, Save, Search, Loader2, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface EntityManagementProps {
@@ -201,30 +200,6 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                   </>
                 )}
 
-                {/* Event Specific */}
-                {collectionName === 'events' && (
-                  <>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Start Date</label>
-                      <Input 
-                        type="datetime-local"
-                        value={formData.startDate || ""} 
-                        onChange={(e) => setFormData({...formData, startDate: e.target.value})}
-                        className="rounded-xl h-10 bg-white"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">End Date</label>
-                      <Input 
-                        type="datetime-local"
-                        value={formData.endDate || ""} 
-                        onChange={(e) => setFormData({...formData, endDate: e.target.value})}
-                        className="rounded-xl h-10 bg-white"
-                      />
-                    </div>
-                  </>
-                )}
-
                 {/* Contact & Web Info */}
                 {(['accommodations', 'localCuisineSpots', 'transportationOptions', 'wonderAttractions'].includes(collectionName)) && (
                   <>
@@ -245,31 +220,6 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                       />
                     </div>
                   </>
-                )}
-
-                {/* Transport & Dining Specialties */}
-                {collectionName === 'transportationOptions' && (
-                  <div className="space-y-3 md:col-span-3">
-                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Fare & Operating Info</label>
-                    <Input 
-                      value={formData.fareInformation || ""} 
-                      onChange={(e) => setFormData({...formData, fareInformation: e.target.value})}
-                      placeholder="e.g. 5,000 BIF per trip, 6 AM - 6 PM"
-                      className="rounded-xl h-10 bg-white"
-                    />
-                  </div>
-                )}
-                
-                {collectionName === 'localCuisineSpots' && (
-                  <div className="space-y-3 md:col-span-3">
-                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Specialties (Comma Separated)</label>
-                    <Input 
-                      value={formData.specialties || ""} 
-                      onChange={(e) => setFormData({...formData, specialties: e.target.value})}
-                      placeholder="Tilapia, Ndagala, Isombe..."
-                      className="rounded-xl h-10 bg-white"
-                    />
-                  </div>
                 )}
               </div>
 
@@ -339,11 +289,9 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-32">
                   <div className="flex flex-col items-center gap-4 text-muted-foreground">
-                    <Search size={48} className="opacity-20" />
-                    <p className="font-headline text-2xl italic">No records found matching your criteria.</p>
-                    <Button variant="link" onClick={() => {setSearchTerm(""); setIsAdding(true);}}>
-                      Clear search or create your first record
-                    </Button>
+                    <Database size={48} className="opacity-20" />
+                    <p className="font-headline text-2xl italic">No records found in Firestore.</p>
+                    <p className="text-sm max-w-md mx-auto">Use the <b>Seed Initial Data</b> button in the sidebar to populate this collection with initial Rumonge content.</p>
                   </div>
                 </TableCell>
               </TableRow>
