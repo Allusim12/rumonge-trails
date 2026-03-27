@@ -1,16 +1,17 @@
-
 "use client";
 
-import React, { useState } from "react";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, deleteDoc, doc, serverTimestamp, getDoc } from "firebase/firestore";
+import React, { useState, useRef } from "react";
+import { useFirestore, useCollection, useMemoFirebase, useStorage } from "@/firebase";
+import { collection, query, orderBy, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Edit2, X, Save, Search, Loader2, Database, ImageIcon, Mail } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Trash2, Edit2, X, Save, Search, Loader2, ImageIcon, Mail, Upload, Link as LinkIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
@@ -20,11 +21,14 @@ interface EntityManagementProps {
 
 export function EntityManagement({ collectionName }: EntityManagementProps) {
   const firestore = useFirestore();
+  const storage = useStorage();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
   const [searchTerm, setSearchTerm] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Adjust collection name for "singleton" content stored in site_content
   const isOffice = collectionName === "site_content_office";
@@ -62,10 +66,36 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
     resetForm();
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !storage) return;
+
+    setIsUploading(true);
+    try {
+      const storageRef = ref(storage, `images/${Date.now()}_${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      setFormData((prev: any) => ({
+        ...prev,
+        imageUrl: downloadURL,
+        url: downloadURL // Handle both common image key names
+      }));
+      
+      toast({ title: "Upload Complete", description: "Image stored and linked." });
+    } catch (error) {
+      console.error("Upload error", error);
+      toast({ variant: "destructive", title: "Upload Failed", description: "Check storage permissions." });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({});
     setEditingId(null);
     setIsAdding(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleEdit = (entity: any) => {
@@ -85,11 +115,8 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
   };
 
   const filteredEntities = entities?.filter(e => {
-    // If office, we only want the 'office' doc
     if (isOffice) return e.id === "office";
-    // If hero, we only want the 'hero' doc
     if (collectionName === "site_content") return e.id === "hero";
-
     const name = (e.name || e.title || e.email || "").toLowerCase();
     return name.includes(searchTerm.toLowerCase());
   });
@@ -151,18 +178,6 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                       className="rounded-2xl h-12"
                     />
                   </div>
-                  {(collectionName === 'site_content' || isOffice) && (
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">
-                        {isOffice ? "Page Title" : "Headline Italic (Optional)"}
-                      </label>
-                      <Input 
-                        value={formData.titleItalic || formData.title || ""} 
-                        onChange={(e) => setFormData({...formData, titleItalic: e.target.value, title: e.target.value})}
-                        className="rounded-2xl h-12"
-                      />
-                    </div>
-                  )}
                   <div className="space-y-3">
                     <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">
                        {isOffice ? "Role / Subtitle" : "Type / Badge / Category"}
@@ -178,18 +193,49 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                 {!(collectionName === 'travelTips' || collectionName === 'newsletter_subscriptions') && (
                   <div className="space-y-3">
                     <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                      <ImageIcon size={14} /> {isOffice ? "Administrator Photo URL" : "Image URL"}
+                      <ImageIcon size={14} /> Image Management
                     </label>
-                    <div className="flex gap-4">
-                      <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-secondary/30 shrink-0 border">
-                        {(formData.imageUrl || formData.url) && <Image src={formData.imageUrl || formData.url} alt="" fill className="object-cover" />}
+                    
+                    <div className="flex flex-col gap-4 p-4 bg-secondary/20 rounded-2xl border">
+                      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-white border shadow-inner">
+                        {(formData.imageUrl || formData.url) ? (
+                          <Image src={formData.imageUrl || formData.url} alt="Preview" fill className="object-cover" />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-muted-foreground">
+                            <ImageIcon size={48} className="opacity-20" />
+                          </div>
+                        )}
+                        {isUploading && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <Loader2 className="animate-spin text-white" size={32} />
+                          </div>
+                        )}
                       </div>
-                      <Input 
-                        value={formData.imageUrl || formData.url || ""} 
-                        onChange={(e) => setFormData({...formData, imageUrl: e.target.value, url: e.target.value})}
-                        placeholder="https://..."
-                        className="rounded-2xl h-12"
-                      />
+
+                      <Tabs defaultValue="upload" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2 rounded-xl">
+                          <TabsTrigger value="upload" className="rounded-lg"><Upload size={14} className="mr-2" /> Upload</TabsTrigger>
+                          <TabsTrigger value="link" className="rounded-lg"><LinkIcon size={14} className="mr-2" /> Link</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="upload" className="pt-2">
+                          <Input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleFileUpload}
+                            ref={fileInputRef}
+                            className="rounded-xl h-12"
+                            disabled={isUploading}
+                          />
+                        </TabsContent>
+                        <TabsContent value="link" className="pt-2">
+                          <Input 
+                            value={formData.imageUrl || formData.url || ""} 
+                            onChange={(e) => setFormData({...formData, imageUrl: e.target.value, url: e.target.value})}
+                            placeholder="https://..."
+                            className="rounded-xl h-12"
+                          />
+                        </TabsContent>
+                      </Tabs>
                     </div>
                   </div>
                 )}
@@ -210,7 +256,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
               )}
 
               <div className="flex gap-4 pt-4">
-                <Button type="submit" className="flex-1 h-14 rounded-2xl font-bold text-lg">
+                <Button type="submit" className="flex-1 h-14 rounded-2xl font-bold text-lg" disabled={isUploading}>
                   <Save size={20} className="mr-2" />
                   Save Changes
                 </Button>
