@@ -1,18 +1,20 @@
+
 "use client";
 
 import React, { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
-import { collection, query, orderBy, limit, doc, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Settings, Heart, Map, Clock, ChevronRight, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/avatar"; // Corrected path
+import { Avatar as ShAvatar, AvatarFallback as ShAvatarFallback, AvatarImage as ShAvatarImage } from "@/components/ui/avatar";
+import { LogOut, Settings, Heart, Map, Clock, ChevronRight, Sparkles, ShieldCheck, Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { format } from "date-fns";
-import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ProfilePage() {
@@ -40,6 +42,16 @@ export default function ProfilePage() {
 
   const { data: itineraries, isLoading: isItinerariesLoading } = useCollection(itinerariesQuery);
 
+  const wishlistQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(
+      collection(firestore, "users", user.uid, "savedItems"),
+      orderBy("savedAt", "desc")
+    );
+  }, [firestore, user?.uid]);
+
+  const { data: wishlist, isLoading: isWishlistLoading } = useCollection(wishlistQuery);
+
   const handleLogout = async () => {
     if (auth) {
       await signOut(auth);
@@ -47,11 +59,16 @@ export default function ProfilePage() {
     }
   };
 
+  const handleDeleteSavedItem = (id: string) => {
+    if (!firestore || !user) return;
+    deleteDocumentNonBlocking(doc(firestore, "users", user.uid, "savedItems", id));
+    toast({ title: "Removed", description: "Item removed from your wishlist." });
+  };
+
   const handleBecomeAdmin = () => {
     if (!firestore || !user) return;
     setIsPromoting(true);
     
-    // Using setDocumentNonBlocking to follow the pattern
     const adminRef = doc(firestore, "roles_admin", user.uid);
     setDocumentNonBlocking(adminRef, {
       id: user.uid,
@@ -59,12 +76,11 @@ export default function ProfilePage() {
       promotedAt: serverTimestamp(),
     }, { merge: true });
     
-    // We assume success for the UI since it's non-blocking
     setTimeout(() => {
       setIsPromoting(false);
       toast({
-        title: "Admin Access Requested",
-        description: "Your administrative permissions are being synchronized.",
+        title: "Admin Access Granted",
+        description: "You now have access to the Admin Dashboard.",
       });
     }, 1000);
   };
@@ -91,12 +107,12 @@ export default function ProfilePage() {
           <div className="lg:col-span-4 space-y-6">
             <Card className="border-none shadow-xl bg-white">
               <CardContent className="pt-10 pb-8 text-center">
-                <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-white shadow-lg">
-                  <AvatarImage src={user.photoURL || ""} />
-                  <AvatarFallback className="text-2xl bg-primary text-white">
+                <ShAvatar className="w-24 h-24 mx-auto mb-4 border-4 border-white shadow-lg">
+                  <ShAvatarImage src={user.photoURL || ""} />
+                  <ShAvatarFallback className="text-2xl bg-primary text-white">
                     {user.email?.[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                  </ShAvatarFallback>
+                </ShAvatar>
                 <h2 className="font-headline text-2xl font-bold">{user.displayName || "Explorer"}</h2>
                 <p className="text-muted-foreground text-sm mb-6">{user.email}</p>
                 <div className="flex flex-col gap-3">
@@ -135,6 +151,7 @@ export default function ProfilePage() {
             <h2 className="font-headline text-3xl font-bold mb-4">My <span className="text-primary italic">Journey</span></h2>
             
             <div className="grid grid-cols-1 gap-6">
+              {/* Itineraries */}
               <Card className="border-none shadow-md bg-white">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
@@ -177,27 +194,45 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground italic text-sm">
-                      <div className="bg-secondary/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                         <Map className="opacity-20" />
-                      </div>
                       No saved itineraries yet.
                     </div>
                   )}
                 </CardContent>
               </Card>
 
+              {/* Wishlist */}
               <Card className="border-none shadow-md bg-white">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Heart className="text-accent" size={20} />
                     Wishlist
                   </CardTitle>
-                  <CardDescription>Attractions you want to visit</CardDescription>
+                  <CardDescription>Attractions and spots you want to visit</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-muted-foreground italic text-sm bg-secondary/10 rounded-xl border border-dashed border-secondary">
-                    Your wishlist is empty. Start exploring the wonders!
-                  </div>
+                  {isWishlistLoading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="animate-spin text-accent" />
+                    </div>
+                  ) : wishlist && wishlist.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {wishlist.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between p-4 border rounded-xl bg-background hover:border-accent transition-all group">
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-accent tracking-widest">{item.savedEntityType}</span>
+                            <h4 className="font-bold">{item.savedEntityName}</h4>
+                          </div>
+                          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => handleDeleteSavedItem(item.id)}>
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground italic text-sm bg-secondary/10 rounded-xl border border-dashed border-secondary">
+                      Your wishlist is empty. Start exploring the wonders!
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

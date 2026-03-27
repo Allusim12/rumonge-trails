@@ -7,58 +7,79 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { MapPin, Camera, Star, Search, Filter } from "lucide-react";
+import { MapPin, Camera, Star, Search, Filter, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy } from "firebase/firestore";
+import { WishlistButton } from "@/components/WishlistButton";
 
-const wonders = [
+const staticWonders = [
   {
-    title: "Saga Resort Beach",
-    category: "Relaxation",
-    location: "Saga Shoreline",
+    id: "static-1",
+    name: "Saga Resort Beach",
+    type: "Relaxation",
+    address: "Saga Shoreline",
     description: "Pristine golden sands meeting the crystal waters of Lake Tanganyika.",
     image: "rumonge-beach",
     rating: 4.9
   },
   {
-    title: "Tanganyika Fishing Hub",
-    category: "Adventure",
-    location: "Lake Tanganyika",
+    id: "static-2",
+    name: "Tanganyika Fishing Hub",
+    type: "Adventure",
+    address: "Lake Tanganyika",
     description: "Experience the traditional fishing methods and the legendary biodiversity of the world's longest lake.",
     image: "fishing-boats",
     rating: 4.8
   },
   {
-    title: "Palm Oil Estates",
-    category: "Culture",
-    location: "Rural Rumonge",
+    id: "static-3",
+    name: "Palm Oil Estates",
+    type: "Culture",
+    address: "Rural Rumonge",
     description: "The economic heart of the commune, showing centuries-old extraction traditions.",
     image: "palm-oil",
     rating: 4.7
   },
   {
-    title: "Rumonge Hill Trails",
-    category: "Nature",
-    location: "Eastern Hills",
+    id: "static-4",
+    name: "Rumonge Hill Trails",
+    type: "Nature",
+    address: "Eastern Hills",
     description: "Panoramic views of the lake and lush tropical vegetation ideal for hiking.",
     image: "nature-trail",
     rating: 4.6
   }
 ];
 
-const categories = ["All", "Relaxation", "Adventure", "Culture", "Nature"];
+const categories = ["All", "Relaxation", "Adventure", "Culture", "Nature", "Beach"];
 
 export function AttractionsGrid() {
+  const { firestore } = useFirestore();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
+  const wondersQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "wonderAttractions"), orderBy("createdAt", "desc"));
+  }, [firestore]);
+
+  const { data: dbWonders, isLoading } = useCollection(wondersQuery);
+
+  const allWonders = useMemo(() => {
+    const combined = [...(dbWonders || []), ...staticWonders];
+    // Remove duplicates by name if any
+    return combined.filter((v, i, a) => a.findIndex(t => (t.name === v.name)) === i);
+  }, [dbWonders]);
+
   const filteredWonders = useMemo(() => {
-    return wonders.filter(w => {
-      const matchesSearch = w.title.toLowerCase().includes(search.toLowerCase()) || 
-                            w.description.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = activeCategory === "All" || w.category === activeCategory;
+    return allWonders.filter(w => {
+      const matchesSearch = w.name.toLowerCase().includes(search.toLowerCase()) || 
+                            (w.description || "").toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = activeCategory === "All" || w.type === activeCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [search, activeCategory]);
+  }, [search, activeCategory, allWonders]);
 
   return (
     <section id="wonders" className="py-24 px-6 bg-white">
@@ -104,31 +125,42 @@ export function AttractionsGrid() {
           </div>
         </div>
 
-        {filteredWonders.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="animate-spin text-primary" size={40} />
+          </div>
+        ) : filteredWonders.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {filteredWonders.map((wonder, index) => {
-              const imgData = PlaceHolderImages.find(img => img.id === wonder.image);
+              const imgData = PlaceHolderImages.find(img => img.id === wonder.image || img.id === "rumonge-hero");
               return (
-                <Card key={index} className="group border-none shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden bg-background">
+                <Card key={wonder.id} className="group border-none shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden bg-background">
                   <div className="relative h-64 overflow-hidden">
                     <Image
                       src={imgData?.imageUrl || "https://picsum.photos/seed/placeholder/800/600"}
-                      alt={wonder.title}
+                      alt={wonder.name}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
-                      data-ai-hint={imgData?.imageHint}
+                      data-ai-hint={imgData?.imageHint || "rumonge landscape"}
                     />
                     <Badge className="absolute top-4 left-4 bg-white/90 text-primary border-none font-bold">
-                      {wonder.category}
+                      {wonder.type}
                     </Badge>
+                    <div className="absolute top-4 right-4">
+                      <WishlistButton 
+                        entityId={wonder.id} 
+                        entityType="WonderAttraction" 
+                        entityName={wonder.name} 
+                      />
+                    </div>
                   </div>
                   <CardContent className="p-6">
                     <div className="flex items-center gap-1 text-primary mb-2">
                       <MapPin size={14} />
-                      <span className="text-xs font-bold uppercase tracking-wider">{wonder.location}</span>
+                      <span className="text-xs font-bold uppercase tracking-wider">{wonder.address}</span>
                     </div>
                     <h3 className="font-headline text-xl font-bold mb-2 group-hover:text-primary transition-colors">
-                      {wonder.title}
+                      {wonder.name}
                     </h3>
                     <p className="font-body text-sm text-muted-foreground mb-4 line-clamp-2">
                       {wonder.description}
@@ -136,7 +168,7 @@ export function AttractionsGrid() {
                     <div className="flex items-center justify-between border-t pt-4">
                       <div className="flex items-center gap-1">
                         <Star size={14} className="fill-yellow-500 text-yellow-500" />
-                        <span className="text-sm font-bold">{wonder.rating}</span>
+                        <span className="text-sm font-bold">{wonder.rating || "4.5"}</span>
                       </div>
                       <button className="text-accent text-sm font-bold hover:underline">Explore More</button>
                     </div>

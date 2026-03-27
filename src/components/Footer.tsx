@@ -64,10 +64,11 @@ export function Footer() {
           <ul className="space-y-4 font-body text-white/70">
             <li><Link href="/wonders" className="hover:text-primary transition-colors">Natural Wonders</Link></li>
             <li><Link href="/heritage" className="hover:text-primary transition-colors">Cultural Heritage</Link></li>
+            <li><Link href="/dining" className="hover:text-primary transition-colors">Dining & Cuisine</Link></li>
             <li><Link href="/stays" className="hover:text-primary transition-colors">Hotels & Stays</Link></li>
+            <li><Link href="/transport" className="hover:text-primary transition-colors">Transport Guide</Link></li>
             <li><Link href="/itinerary" className="hover:text-primary transition-colors">AI Itinerary Planner</Link></li>
             <li><Link href="/events" className="hover:text-primary transition-colors">Festivals Calendar</Link></li>
-            <li><Link href="/guide" className="hover:text-primary transition-colors">Visitor Guide</Link></li>
           </ul>
         </div>
 
