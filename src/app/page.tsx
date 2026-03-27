@@ -1,6 +1,7 @@
 
 "use client";
 
+import React, { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Hero } from "@/components/Hero";
 import { GlobalSearch } from "@/components/GlobalSearch";
@@ -11,12 +12,43 @@ import { LanguageGuide } from "@/components/LanguageGuide";
 import { ChatGuide } from "@/components/ChatGuide";
 import { Footer } from "@/components/Footer";
 import { EventsList } from "@/components/EventsList";
-import { Calendar, Music, TreePalm, ArrowRight, Quote, Sparkles, Newspaper } from "lucide-react";
+import { Calendar, Music, TreePalm, ArrowRight, Quote, Sparkles, Newspaper, TrendingUp, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { TrendingList } from "@/components/TrendingList";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy, limit } from "firebase/firestore";
+import { getCommunityBuzz, type CommunityBuzzOutput } from "@/ai/flows/community-buzz";
 
 export default function Home() {
+  const firestore = useFirestore();
+  const [buzz, setBuzz] = useState<CommunityBuzzOutput | null>(null);
+  const [isBuzzLoading, setIsBuzzLoading] = useState(false);
+
+  const reviewsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "reviews"), orderBy("createdAt", "desc"), limit(5));
+  }, [firestore]);
+
+  const { data: reviews } = useCollection(reviewsQuery);
+
+  useEffect(() => {
+    if (reviews && reviews.length > 0 && !buzz && !isBuzzLoading) {
+      setIsBuzzLoading(true);
+      const recentReviews = reviews.map(r => ({
+        userName: r.userName || "Traveler",
+        comment: r.comment,
+        rating: r.rating
+      }));
+      
+      getCommunityBuzz({ reviews: recentReviews })
+        .then(setBuzz)
+        .catch(console.error)
+        .finally(() => setIsBuzzLoading(false));
+    }
+  }, [reviews, buzz, isBuzzLoading]);
+
   return (
     <main className="min-h-screen">
       <Navigation />
@@ -27,6 +59,40 @@ export default function Home() {
           <GlobalSearch />
         </div>
       </div>
+
+      {/* Community Pulse - AI Insight */}
+      {buzz && (
+        <section className="py-20 px-6 bg-secondary/10 border-y">
+          <div className="max-w-7xl mx-auto">
+            <Card className="border-none shadow-2xl bg-white overflow-hidden rounded-[2.5rem]">
+              <CardContent className="p-0 flex flex-col lg:flex-row">
+                <div className="bg-primary p-12 lg:w-1/3 text-primary-foreground flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-4 bg-white/10 w-fit px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                    <Sparkles size={14} /> AI Insight
+                  </div>
+                  <h3 className="font-headline text-4xl font-bold mb-4">Community <span className="italic">Pulse</span></h3>
+                  <p className="opacity-80 text-sm leading-relaxed">
+                    Our digital guide Amahoro has synthesized recent traveler stories to give you a snapshot of Rumonge right now.
+                  </p>
+                </div>
+                <div className="p-12 lg:w-2/3 flex flex-col justify-center">
+                  <Quote className="text-primary/20 mb-6" size={48} />
+                  <p className="font-headline text-2xl md:text-3xl font-bold italic mb-8 text-foreground/80 leading-snug">
+                    "{buzz.summary}"
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {buzz.trendingTopics.map((topic, i) => (
+                      <span key={i} className="bg-secondary text-primary px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border border-primary/10">
+                        #{topic.replace(/\s+/g, '')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
 
       {/* Trending Updates Preview */}
       <section className="py-24 px-6 bg-white">

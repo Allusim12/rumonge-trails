@@ -1,24 +1,36 @@
+
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ChatGuide } from "@/components/ChatGuide";
-import { useFirestore, useDoc, useMemoFirebase, useCollection } from "@/firebase";
-import { doc, collection, query, where, orderBy } from "firebase/firestore";
+import { useFirestore, useDoc, useMemoFirebase, useCollection, useUser } from "@/firebase";
+import { doc, collection, query, where, orderBy, serverTimestamp } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Star, Calendar, ArrowLeft, Loader2, MessageSquare } from "lucide-react";
+import { MapPin, Star, Calendar, ArrowLeft, Loader2, MessageSquare, Send } from "lucide-react";
 import Link from "next/link";
 import { WishlistButton } from "@/components/WishlistButton";
 import { format } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export default function WonderDetailPage() {
   const { id } = useParams();
+  const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
+  
+  const [comment, setComment] = useState("");
+  const [rating, setRating] = useState(5);
+  const [isPosting, setIsPosting] = useState(false);
 
   const wonderRef = useMemoFirebase(() => 
     firestore ? doc(firestore, "wonderAttractions", id as string) : null
@@ -36,6 +48,30 @@ export default function WonderDetailPage() {
   }, [firestore, id]);
 
   const { data: reviews, isLoading: isReviewsLoading } = useCollection(reviewsQuery);
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !comment.trim() || !firestore || isPosting) return;
+
+    setIsPosting(true);
+    try {
+      await addDocumentNonBlocking(collection(firestore, "reviews"), {
+        userId: user.uid,
+        userName: user.displayName || user.email?.split('@')[0] || "Anonymous Traveler",
+        targetEntityType: "WonderAttraction",
+        targetEntityId: id,
+        rating,
+        comment: comment.trim(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      setComment("");
+      setRating(5);
+      toast({ title: "Review Shared!", description: "Thank you for your feedback." });
+    } finally {
+      setIsPosting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -67,7 +103,7 @@ export default function WonderDetailPage() {
       {/* Hero Section */}
       <section className="relative h-[60vh] w-full overflow-hidden">
         <Image
-          src={heroImg?.imageUrl || "https://picsum.photos/seed/rumonge1/1920/1080"}
+          src={wonder.imageUrl || heroImg?.imageUrl || "https://picsum.photos/seed/rumonge1/1920/1080"}
           alt={wonder.name}
           fill
           className="object-cover"
@@ -109,7 +145,7 @@ export default function WonderDetailPage() {
       <section className="py-24 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-8 space-y-12">
           <div className="prose prose-lg max-w-none">
-            <h2 className="font-headline text-3xl font-bold mb-6">About the <span className="text-primary italic">Wonder</span></h2>
+            <h2 className="font-headline text-3xl font-bold mb-6 text-foreground">About the <span className="text-primary italic">Wonder</span></h2>
             <p className="text-muted-foreground text-xl leading-relaxed whitespace-pre-wrap">
               {wonder.description}
             </p>
@@ -120,9 +156,39 @@ export default function WonderDetailPage() {
               <MessageSquare className="text-primary" />
               Traveler Reviews
             </h3>
+
+            {/* Post Review Form */}
+            {user ? (
+              <form onSubmit={handleSubmitReview} className="mb-12 bg-secondary/10 p-6 rounded-2xl border-2 border-dashed border-primary/20">
+                <p className="font-bold text-sm mb-4">Have you visited {wonder.name}? Share your experience.</p>
+                <div className="flex gap-2 mb-4">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button key={s} type="button" onClick={() => setRating(s)} className="hover:scale-110 transition-transform">
+                      <Star size={24} className={cn(s <= rating ? "fill-yellow-500 text-yellow-500" : "text-gray-300")} />
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Textarea 
+                    placeholder="Your story..." 
+                    className="flex-1 rounded-xl bg-white"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                  />
+                  <Button type="submit" disabled={isPosting} className="h-auto px-6 rounded-xl">
+                    {isPosting ? <Loader2 className="animate-spin" /> : <Send size={20} />}
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="mb-12 p-6 bg-secondary/10 rounded-2xl text-center">
+                <p className="text-sm text-muted-foreground italic mb-4">Please log in to share your review of this wonder.</p>
+                <Button variant="outline" className="rounded-xl" asChild><Link href="/login">Login</Link></Button>
+              </div>
+            )}
             
             {isReviewsLoading ? (
-              <Loader2 className="animate-spin text-primary" />
+              <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
             ) : reviews && reviews.length > 0 ? (
               <div className="space-y-8">
                 {reviews.map((review) => (
@@ -130,7 +196,7 @@ export default function WonderDetailPage() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center font-bold text-primary">
-                          {review.userName?.[0]}
+                          {review.userName?.[0].toUpperCase()}
                         </div>
                         <div>
                           <p className="font-bold">{review.userName}</p>
