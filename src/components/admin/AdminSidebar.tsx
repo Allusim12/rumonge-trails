@@ -11,7 +11,9 @@ import {
   Utensils, 
   Lightbulb,
   Bus,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Mail,
+  MessageSquare
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -27,7 +29,9 @@ const navItems = [
   { id: "localCuisineSpots", label: "Dining", icon: Utensils },
   { id: "transportationOptions", label: "Transport", icon: Bus },
   { id: "travelTips", label: "Tips", icon: Lightbulb },
-  { id: "mediaAssets", label: "Media", icon: ImageIcon },
+  { id: "mediaAssets", label: "Media Assets", icon: ImageIcon },
+  { id: "reviews", label: "Traveler Reviews", icon: MessageSquare },
+  { id: "newsletter_subscriptions", label: "Subscribers", icon: Mail },
 ];
 
 export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
