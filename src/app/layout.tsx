@@ -4,8 +4,57 @@ import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Rumonge Cultural Trails | Discover Burundi',
-  description: 'Explore the natural wonders, culture, and traditions of Rumonge Commune.',
+  title: {
+    default: 'Rumonge Cultural Trails | Discover the Heart of Burundi',
+    template: '%s | Rumonge Cultural Trails',
+  },
+  description: 'Explore Rumonge Commune in Burundi. Discover Saga Beach, Mugara Hot Springs (Amashuha), Lake Tanganyika, traditional drumming, and local palm oil heritage.',
+  keywords: [
+    'Rumonge',
+    'Burundi Tourism',
+    'Lake Tanganyika',
+    'Saga Beach',
+    'Amashuha',
+    'Mugara Hot Springs',
+    'Burundian Culture',
+    'African Travel',
+    'Cultural Heritage',
+    'Palm Oil Traditions',
+    'Burundi Nature',
+    'Rumonge Cultural Trails',
+  ],
+  authors: [{ name: 'Rumonge Cultural Trails' }],
+  creator: 'Rumonge Cultural Trails',
+  publisher: 'Rumonge Cultural Trails',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: 'Rumonge Cultural Trails | Discover Burundi',
+    description: 'Breathtaking landscapes, rich traditions, and warm hospitality on the shores of Lake Tanganyika.',
+    url: 'https://rumongetrails.bi',
+    siteName: 'Rumonge Cultural Trails',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Rumonge Cultural Trails | Discover Burundi',
+    description: 'The ultimate guide to exploring the natural wonders and cultural heritage of Rumonge.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({
