@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Edit2, X, Save, Search, Loader2, Database, ImageIcon } from "lucide-react";
+import { Plus, Trash2, Edit2, X, Save, Search, Loader2, Database, ImageIcon, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
@@ -105,7 +106,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        {!isAdding && !isOffice && collectionName !== "site_content" && (
+        {!isAdding && !isOffice && collectionName !== "site_content" && collectionName !== "newsletter_subscriptions" && (
           <Button onClick={() => setIsAdding(true)} className="rounded-xl h-12 px-6 font-bold shadow-lg">
             <Plus size={20} className="mr-2" />
             Add New Record
@@ -174,35 +175,39 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                    <ImageIcon size={14} /> {isOffice ? "Administrator Photo URL" : "Image URL"}
-                  </label>
-                  <div className="flex gap-4">
-                    <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-secondary/30 shrink-0 border">
-                      {(formData.imageUrl || formData.url) && <Image src={formData.imageUrl || formData.url} alt="" fill className="object-cover" />}
+                {!(collectionName === 'travelTips' || collectionName === 'newsletter_subscriptions') && (
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                      <ImageIcon size={14} /> {isOffice ? "Administrator Photo URL" : "Image URL"}
+                    </label>
+                    <div className="flex gap-4">
+                      <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-secondary/30 shrink-0 border">
+                        {(formData.imageUrl || formData.url) && <Image src={formData.imageUrl || formData.url} alt="" fill className="object-cover" />}
+                      </div>
+                      <Input 
+                        value={formData.imageUrl || formData.url || ""} 
+                        onChange={(e) => setFormData({...formData, imageUrl: e.target.value, url: e.target.value})}
+                        placeholder="https://..."
+                        className="rounded-2xl h-12"
+                      />
                     </div>
-                    <Input 
-                      value={formData.imageUrl || formData.url || ""} 
-                      onChange={(e) => setFormData({...formData, imageUrl: e.target.value, url: e.target.value})}
-                      placeholder="https://..."
-                      className="rounded-2xl h-12"
-                    />
                   </div>
-                </div>
+                )}
               </div>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">
-                   {isOffice ? "Administrator Quote / Mission" : "Description / Subtitle / Content"}
-                </label>
-                <Textarea 
-                  required
-                  value={formData.description || formData.subtitle || formData.content || ""} 
-                  onChange={(e) => setFormData({...formData, description: e.target.value, subtitle: e.target.value, content: e.target.value})}
-                  className="rounded-2xl min-h-[150px]"
-                />
-              </div>
+              {collectionName !== 'newsletter_subscriptions' && (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">
+                     {isOffice ? "Administrator Quote / Mission" : "Description / Subtitle / Content"}
+                  </label>
+                  <Textarea 
+                    required
+                    value={formData.description || formData.subtitle || formData.content || ""} 
+                    onChange={(e) => setFormData({...formData, description: e.target.value, subtitle: e.target.value, content: e.target.value})}
+                    className="rounded-2xl min-h-[150px]"
+                  />
+                </div>
+              )}
 
               <div className="flex gap-4 pt-4">
                 <Button type="submit" className="flex-1 h-14 rounded-2xl font-bold text-lg">
@@ -223,7 +228,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
           <TableHeader className="bg-secondary/30">
             <TableRow>
               <TableHead className="font-bold py-6 pl-8">Identity</TableHead>
-              <TableHead className="font-bold py-6">Category</TableHead>
+              <TableHead className="font-bold py-6">Category / Info</TableHead>
               <TableHead className="text-right font-bold py-6 pr-8">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -232,20 +237,37 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
               <TableRow key={entity.id} className="hover:bg-primary/5 transition-colors">
                 <TableCell className="font-bold py-6 pl-8">
                   <div className="flex items-center gap-4">
-                    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-secondary/30 border">
-                      {(entity.imageUrl || entity.url) && <Image src={entity.imageUrl || entity.url} alt="" fill className="object-cover" />}
-                    </div>
-                    <span>{entity.name || entity.title || entity.email || entity.id}</span>
+                    {!(collectionName === 'travelTips' || collectionName === 'newsletter_subscriptions') && (
+                      <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-secondary/30 border">
+                        {(entity.imageUrl || entity.url) && <Image src={entity.imageUrl || entity.url} alt="" fill className="object-cover" />}
+                      </div>
+                    )}
+                    {collectionName === 'newsletter_subscriptions' ? (
+                      <div className="flex items-center gap-2">
+                        <Mail size={16} className="text-primary" />
+                        <span>{entity.email}</span>
+                      </div>
+                    ) : (
+                      <span>{entity.name || entity.title || entity.id}</span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="py-6">
-                  <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold uppercase">
-                    {entity.type || entity.badge || entity.category || entity.subtitle || "General"}
-                  </span>
+                  {collectionName === 'newsletter_subscriptions' ? (
+                     <span className="text-muted-foreground text-xs italic">
+                        Subscribed on {entity.subscribedAt?.seconds ? new Date(entity.subscribedAt.seconds * 1000).toLocaleDateString() : 'Recent'}
+                     </span>
+                  ) : (
+                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                      {entity.type || entity.badge || entity.category || entity.subtitle || "General"}
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell className="text-right py-6 pr-8">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(entity)}><Edit2 size={18} /></Button>
+                    {collectionName !== 'newsletter_subscriptions' && (
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(entity)}><Edit2 size={18} /></Button>
+                    )}
                     {!isOffice && collectionName !== "site_content" && (
                       <Button variant="ghost" size="icon" onClick={() => handleDelete(entity.id)}><Trash2 size={18} /></Button>
                     )}

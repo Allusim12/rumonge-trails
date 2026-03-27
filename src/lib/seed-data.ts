@@ -114,11 +114,30 @@ export async function seedInitialData(db: Firestore) {
     { url: "https://picsum.photos/seed/food/800/600", caption: "Traditional Flavors", mediaType: "food", uploadedAt: now }
   ];
 
+  // 5. Travel Tips
+  const tips = [
+    {
+      title: "Transport Negotiation",
+      category: "Transport",
+      description: "Always agree on a Boda-Boda fare before hopping on. Prices are usually between 1,000 and 3,000 BIF for short distances.",
+      createdAt: now,
+      updatedAt: now
+    },
+    {
+      title: "Best Sunset Spot",
+      category: "Leisure",
+      description: "Head to the pier near Saga Beach around 5:30 PM for the best golden hour views of the lake.",
+      createdAt: now,
+      updatedAt: now
+    }
+  ];
+
   // Seeding
   updates.forEach(u => addDocumentNonBlocking(collection(db, "trendingUpdates"), u));
   wonders.forEach(w => addDocumentNonBlocking(collection(db, "wonderAttractions"), w));
   stays.forEach(s => addDocumentNonBlocking(collection(db, "accommodations"), s));
   media.forEach(m => addDocumentNonBlocking(collection(db, "mediaAssets"), m));
+  tips.forEach(t => addDocumentNonBlocking(collection(db, "travelTips"), t));
 
   return true;
 }

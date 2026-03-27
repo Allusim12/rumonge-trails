@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -33,7 +34,7 @@ export default function CommunityPage() {
 
   const tipsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "travelTips"), orderBy("lastUpdatedAt", "desc"), limit(10));
+    return query(collection(firestore, "travelTips"), orderBy("updatedAt", "desc"), limit(10));
   }, [firestore]);
 
   const { data: tips, isLoading: isTipsLoading } = useCollection(tipsQuery);
@@ -212,8 +213,8 @@ export default function CommunityPage() {
                           </div>
                           <div>
                             <span className="text-[10px] uppercase font-bold tracking-widest text-accent mb-1 block">{tip.category}</span>
-                            <h3 className="text-xl font-bold mb-2 group-hover:text-accent transition-colors">{tip.title}</h3>
-                            <p className="text-muted-foreground leading-relaxed">{tip.content}</p>
+                            <h3 className="text-xl font-bold mb-2 group-hover:text-accent transition-colors">{tip.title || tip.name}</h3>
+                            <p className="text-muted-foreground leading-relaxed">{tip.content || tip.description}</p>
                           </div>
                         </div>
                       </CardContent>

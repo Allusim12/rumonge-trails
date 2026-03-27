@@ -12,7 +12,7 @@ import { LanguageGuide } from "@/components/LanguageGuide";
 import { ChatGuide } from "@/components/ChatGuide";
 import { Footer } from "@/components/Footer";
 import { EventsList } from "@/components/EventsList";
-import { Calendar, Music, TreePalm, ArrowRight, Quote, Sparkles, Newspaper, TrendingUp, Loader2 } from "lucide-react";
+import { Calendar, Music, TreePalm, ArrowRight, Quote, Sparkles, Newspaper, TrendingUp, Loader2, Volume2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,11 +20,13 @@ import { TrendingList } from "@/components/TrendingList";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { getCommunityBuzz, type CommunityBuzzOutput } from "@/ai/flows/community-buzz";
+import { speakKirundi } from "@/ai/flows/kirundi-tts";
 
 export default function Home() {
   const firestore = useFirestore();
   const [buzz, setBuzz] = useState<CommunityBuzzOutput | null>(null);
   const [isBuzzLoading, setIsBuzzLoading] = useState(false);
+  const [isPlayingPhrase, setIsPlayingPhrase] = useState(false);
 
   const reviewsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -48,6 +50,19 @@ export default function Home() {
         .finally(() => setIsBuzzLoading(false));
     }
   }, [reviews, buzz, isBuzzLoading]);
+
+  const handlePlayPhrase = async () => {
+    setIsPlayingPhrase(true);
+    try {
+      const { audioDataUri } = await speakKirundi("Amahoro asage");
+      const audio = new Audio(audioDataUri);
+      audio.play();
+      audio.onended = () => setIsPlayingPhrase(false);
+    } catch (error) {
+      console.error("TTS error", error);
+      setIsPlayingPhrase(false);
+    }
+  };
 
   return (
     <main className="min-h-screen">
@@ -153,9 +168,19 @@ export default function Home() {
           </div>
           <h2 className="font-headline text-5xl md:text-6xl font-bold text-foreground mb-4">"Amahoro asage"</h2>
           <p className="text-xl text-muted-foreground italic mb-10 leading-relaxed font-body">Translation: "Peace be with you always"</p>
-          <Button variant="ghost" className="text-accent font-bold hover:bg-accent/10 rounded-full px-8 py-6 h-auto border-2 border-accent/20" asChild>
-            <Link href="/guide">Explore Language Hub</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Button 
+              onClick={handlePlayPhrase}
+              disabled={isPlayingPhrase}
+              className="bg-accent text-white font-bold hover:bg-accent/90 rounded-full px-8 py-6 h-auto shadow-lg"
+            >
+              {isPlayingPhrase ? <Loader2 className="animate-spin mr-2" /> : <Volume2 size={20} className="mr-2" />}
+              Listen in Kirundi
+            </Button>
+            <Button variant="ghost" className="text-accent font-bold hover:bg-accent/10 rounded-full px-8 py-6 h-auto border-2 border-accent/20" asChild>
+              <Link href="/guide">Explore Language Hub</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
