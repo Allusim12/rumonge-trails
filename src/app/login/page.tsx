@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useAuth, useUser } from "@/firebase";
+import { useAuth, useUser, errorEmitter } from "@/firebase";
 import { initiateEmailSignIn, initiateEmailSignUp, initiateAnonymousSignIn, initiateGoogleSignIn } from "@/firebase/non-blocking-login";
 import { Compass, LogIn, UserPlus, Ghost, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -22,7 +22,20 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  // Handle redirect after successful login
+  useEffect(() => {
+    const handleAuthError = (error: Error) => {
+      setIsSubmitting(false);
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: error.message || "Something went wrong. Please try again.",
+      });
+    };
+
+    errorEmitter.on('auth-error', handleAuthError);
+    return () => errorEmitter.off('auth-error', handleAuthError);
+  }, [toast]);
+
   useEffect(() => {
     if (user && !isUserLoading) {
       toast({
@@ -43,23 +56,18 @@ export default function LoginPage() {
     } else {
       initiateEmailSignIn(auth, email, password);
     }
-    
-    // Safety timeout to reset submitting state
-    setTimeout(() => setIsSubmitting(false), 5000);
   };
 
   const handleGoogleSignIn = () => {
     if (!auth || isSubmitting) return;
     setIsSubmitting(true);
     initiateGoogleSignIn(auth);
-    setTimeout(() => setIsSubmitting(false), 5000);
   };
 
   const handleAnonymous = () => {
     if (!auth || isSubmitting) return;
     setIsSubmitting(true);
     initiateAnonymousSignIn(auth);
-    setTimeout(() => setIsSubmitting(false), 5000);
   };
 
   return (
@@ -130,6 +138,7 @@ export default function LoginPage() {
 
             <div className="space-y-3">
               <Button 
+                type="button"
                 variant="outline" 
                 className="w-full h-12 rounded-xl font-bold flex gap-2 border-primary/20 hover:bg-primary/5"
                 onClick={handleGoogleSignIn}
@@ -163,6 +172,7 @@ export default function LoginPage() {
               </Button>
 
               <Button 
+                type="button"
                 variant="ghost" 
                 className="w-full h-12 rounded-xl font-bold flex gap-2 text-muted-foreground hover:text-primary"
                 onClick={handleAnonymous}
