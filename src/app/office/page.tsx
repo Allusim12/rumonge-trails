@@ -4,8 +4,9 @@ import React from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ChatGuide } from "@/components/ChatGuide";
-import { Building2, Landmark, ShieldCheck, MapPin, Mail, Phone, Info, Loader2 } from "lucide-react";
+import { Building2, Landmark, ShieldCheck, MapPin, Mail, Phone, Info, Loader2, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -111,7 +112,7 @@ export default function OfficePage() {
             </div>
           </div>
 
-          {/* Contact & Location */}
+          {/* Contact & Registration */}
           <aside className="lg:col-span-5 space-y-8">
             <Card className="border-none shadow-2xl bg-white overflow-hidden rounded-[2rem]">
               <CardHeader className="bg-primary/5 p-8 border-b">
@@ -165,13 +166,27 @@ export default function OfficePage() {
               </CardContent>
             </Card>
 
-            <div className="bg-secondary/20 p-8 rounded-[2rem] border border-dashed border-secondary-foreground/20 text-center">
-              <h4 className="font-bold mb-2">Visitor Registration</h4>
-              <p className="text-sm text-muted-foreground mb-6">International groups are encouraged to notify the office of their visit.</p>
-              <button className="w-full bg-white text-foreground border h-12 rounded-xl font-bold hover:bg-secondary/50 transition-all">
-                Download Group Form
-              </button>
-            </div>
+            {/* Visitor Registration Section */}
+            <Card className="border-none shadow-xl bg-accent/5 overflow-hidden rounded-[2rem] border-accent/10">
+              <CardHeader className="p-8 pb-4">
+                <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                  <FileText className="text-accent" />
+                  Visitor <span className="text-accent italic">Registration</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8 pt-0 space-y-6">
+                <p className="text-muted-foreground leading-relaxed">
+                  International groups and organizations are encouraged to notify the office of their visit to ensure a safe and supportive experience.
+                </p>
+                <div className="p-6 bg-white rounded-2xl border border-accent/20 shadow-sm">
+                  <h4 className="font-bold mb-2 text-foreground">Official Group Form</h4>
+                  <p className="text-sm text-muted-foreground mb-6">Download and complete this form before your arrival in Rumonge.</p>
+                  <Button className="w-full h-12 rounded-xl font-bold bg-accent hover:bg-accent/90 text-white shadow-lg">
+                    Download Group Form
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </aside>
 
         </div>
