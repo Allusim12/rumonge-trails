@@ -17,8 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
-  const { auth } = useAuth();
-  const { firestore } = useFirestore();
+  const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
   const [isPromoting, setIsPromoting] = useState(false);

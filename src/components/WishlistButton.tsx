@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -19,7 +18,7 @@ interface WishlistButtonProps {
 
 export function WishlistButton({ entityId, entityType, entityName, className }: WishlistButtonProps) {
   const { user } = useUser();
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 

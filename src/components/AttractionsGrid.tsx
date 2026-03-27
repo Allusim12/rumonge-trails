@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -55,7 +54,7 @@ const staticWonders = [
 const categories = ["All", "Relaxation", "Adventure", "Culture", "Nature", "Beach"];
 
 export function AttractionsGrid() {
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 

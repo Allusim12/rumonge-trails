@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -14,7 +13,7 @@ import { useRouter } from "next/navigation";
 
 export default function AdminPage() {
   const { user, isUserLoading } = useUser();
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("wonderAttractions");
 

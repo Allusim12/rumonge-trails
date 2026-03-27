@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -15,7 +14,7 @@ import { Star, MessageSquare, User, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
 export default function CommunityPage() {
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const { user } = useUser();
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(5);

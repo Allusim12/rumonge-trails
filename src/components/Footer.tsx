@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -10,7 +9,7 @@ import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 
 export function Footer() {
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

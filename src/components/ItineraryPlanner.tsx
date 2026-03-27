@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -17,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export function ItineraryPlanner() {
   const { user } = useUser();
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);

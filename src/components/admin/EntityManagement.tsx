@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -18,7 +17,7 @@ interface EntityManagementProps {
 }
 
 export function EntityManagement({ collectionName }: EntityManagementProps) {
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

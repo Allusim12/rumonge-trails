@@ -21,7 +21,7 @@ export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user } = useUser();
-  const { firestore } = useFirestore();
+  const firestore = useFirestore();
 
   const adminDocRef = useMemoFirebase(() => 
     (firestore && user) ? doc(firestore, "roles_admin", user.uid) : null
