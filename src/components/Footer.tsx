@@ -120,8 +120,8 @@ export function Footer() {
       <div className="max-w-7xl mx-auto border-t border-white/10 mt-20 pt-10 flex flex-col md:flex-row justify-between items-center gap-6 text-white/40 text-sm">
         <p>© 2024 Rumonge Cultural Trails. All rights reserved.</p>
         <div className="flex gap-8">
-          <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
-          <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
+          <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+          <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
         </div>
       </div>
     </footer>
