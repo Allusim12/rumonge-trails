@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -13,7 +12,8 @@ import {
   Bus,
   Image as ImageIcon,
   Mail,
-  MessageSquare
+  MessageSquare,
+  Home
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -22,6 +22,7 @@ interface AdminSidebarProps {
 }
 
 const navItems = [
+  { id: "site_content", label: "Homepage Hero", icon: Home },
   { id: "wonderAttractions", label: "Wonders", icon: Map },
   { id: "culturalHeritages", label: "Heritage", icon: Palmtree },
   { id: "events", label: "Events", icon: Calendar },
