@@ -1,29 +1,65 @@
+
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ChatGuide } from "@/components/ChatGuide";
-import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { useFirestore, useDoc, useMemoFirebase, useUser } from "@/firebase";
+import { doc, collection, serverTimestamp } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import Image from "next/image";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Star, Wifi, Coffee, Phone, Globe, ArrowLeft, Loader2, Bed } from "lucide-react";
+import { MapPin, Star, Wifi, Coffee, Phone, Globe, ArrowLeft, Loader2, Bed, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export default function StayDetailPage() {
   const { id } = useParams();
   const firestore = useFirestore();
+  const { user } = useUser();
+  const { toast } = useToast();
+  const [isBooking, setIsBooking] = useState(false);
+  const [hasRequested, setHasRequested] = useState(false);
 
   const stayRef = useMemoFirebase(() => 
     firestore ? doc(firestore, "accommodations", id as string) : null
   , [firestore, id]);
 
   const { data: stay, isLoading } = useDoc(stayRef);
+
+  const handleBookingRequest = async () => {
+    if (!user || !firestore || !stay) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to express interest in this stay.",
+      });
+      return;
+    }
+
+    setIsBooking(true);
+    try {
+      await addDocumentNonBlocking(collection(firestore, "bookingRequests"), {
+        userId: user.uid,
+        userName: user.displayName || "Explorer",
+        userEmail: user.email,
+        hotelId: stay.id,
+        hotelName: stay.name,
+        status: "Pending",
+        requestedAt: serverTimestamp(),
+      });
+      setHasRequested(true);
+      toast({
+        title: "Interest Registered!",
+        description: "The hotel staff will be notified of your interest.",
+      });
+    } finally {
+      setIsBooking(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -46,15 +82,13 @@ export default function StayDetailPage() {
     );
   }
 
-  const hotelImg = PlaceHolderImages.find(img => img.id === "hotel-sunrise");
-
   return (
     <main className="min-h-screen bg-secondary/5">
       <Navigation />
       
       <section className="relative h-[50vh] w-full overflow-hidden">
         <Image
-          src={hotelImg?.imageUrl || "https://picsum.photos/seed/hotel/1920/1080"}
+          src={stay.imageUrl || "https://picsum.photos/seed/hotel/1920/1080"}
           alt={stay.name}
           fill
           className="object-cover"
@@ -68,7 +102,7 @@ export default function StayDetailPage() {
             </Link>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="text-white">
-                <Badge className="bg-accent text-white border-none mb-4">{stay.type}</Badge>
+                <Badge className="bg-accent text-white border-none mb-4">{stay.type || "Hotel"}</Badge>
                 <h1 className="font-headline text-5xl md:text-7xl font-bold">{stay.name}</h1>
                 <div className="flex items-center gap-4 mt-4 text-sm font-bold">
                   <div className="flex items-center gap-1">
@@ -77,12 +111,17 @@ export default function StayDetailPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Star size={16} className="fill-yellow-500 text-yellow-500" />
-                    4.8 Rating
+                    {stay.rating || "4.5"} Rating
                   </div>
                 </div>
               </div>
-              <Button className="h-14 px-8 rounded-full text-lg font-bold shadow-xl">
-                Book This Stay
+              <Button 
+                onClick={handleBookingRequest}
+                disabled={isBooking || hasRequested}
+                className="h-14 px-8 rounded-full text-lg font-bold shadow-xl"
+              >
+                {isBooking ? <Loader2 className="animate-spin mr-2" /> : hasRequested ? <CheckCircle2 className="mr-2" /> : null}
+                {hasRequested ? "Interest Registered" : "Express Booking Interest"}
               </Button>
             </div>
           </div>
@@ -109,7 +148,7 @@ export default function StayDetailPage() {
             </div>
             <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col items-center text-center gap-3">
               <Bed className="text-primary" size={24} />
-              <span className="text-xs font-bold uppercase tracking-widest">King Beds</span>
+              <span className="text-xs font-bold uppercase tracking-widest">Premium Beds</span>
             </div>
             <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col items-center text-center gap-3">
               <Star className="text-primary" size={24} />
@@ -124,28 +163,24 @@ export default function StayDetailPage() {
               <CardTitle className="font-headline text-2xl">Contact <span className="text-accent italic">Info</span></CardTitle>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
-              {stay.contactPhone && (
-                <div className="flex gap-4">
-                  <div className="bg-accent/10 p-3 rounded-2xl text-accent h-fit">
-                    <Phone size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-1">Phone Number</p>
-                    <p className="font-bold">{stay.contactPhone}</p>
-                  </div>
+              <div className="flex gap-4">
+                <div className="bg-accent/10 p-3 rounded-2xl text-accent h-fit">
+                  <Phone size={20} />
                 </div>
-              )}
-              {stay.websiteUrl && (
-                <div className="flex gap-4">
-                  <div className="bg-accent/10 p-3 rounded-2xl text-accent h-fit">
-                    <Globe size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-1">Official Website</p>
-                    <a href={stay.websiteUrl} target="_blank" className="font-bold text-primary hover:underline">Visit Site</a>
-                  </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-1">Phone Number</p>
+                  <p className="font-bold">{stay.contactPhone || "+257 22 23 45 67"}</p>
                 </div>
-              )}
+              </div>
+              <div className="flex gap-4">
+                <div className="bg-accent/10 p-3 rounded-2xl text-accent h-fit">
+                  <Globe size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-1">Official Website</p>
+                  <button className="font-bold text-primary hover:underline">Official Site Unavailable</button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </aside>

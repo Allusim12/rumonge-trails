@@ -66,12 +66,59 @@ export async function seedInitialData(db: Firestore) {
       rating: 4.9,
       createdAt: now,
       updatedAt: now
+    },
+    {
+      name: "Saga Resort Beach",
+      type: "Beach",
+      address: "Saga Shoreline",
+      description: "Pristine golden sands meeting the crystal waters of Lake Tanganyika.",
+      latitude: -3.9735,
+      longitude: 29.4384,
+      imageUrl: "https://picsum.photos/seed/beach/800/600",
+      rating: 4.9,
+      createdAt: now,
+      updatedAt: now
     }
+  ];
+
+  // 3. Stays
+  const stays = [
+    {
+      name: "Niyibituronsa Hotel",
+      type: "Hotel",
+      address: "Rumonge Town Center",
+      description: "A central Rumonge landmark known for its traditional hospitality and business-friendly amenities.",
+      price: "$$$",
+      rating: 4.5,
+      imageUrl: "https://picsum.photos/seed/hotel1/800/600",
+      createdAt: now,
+      updatedAt: now
+    },
+    {
+      name: "Sunrise Hotel",
+      type: "Resort",
+      address: "Lakeside Drive",
+      description: "Experience breathtaking morning views over Lake Tanganyika in this serene lakeside retreat.",
+      price: "$$$$",
+      rating: 4.8,
+      imageUrl: "https://picsum.photos/seed/hotel2/800/600",
+      createdAt: now,
+      updatedAt: now
+    }
+  ];
+
+  // 4. Media Assets
+  const media = [
+    { url: "https://picsum.photos/seed/rumonge1/800/600", caption: "Lush Coastlines", mediaType: "nature", uploadedAt: now },
+    { url: "https://picsum.photos/seed/drums/800/600", caption: "Rhythms of Ancestors", mediaType: "culture", uploadedAt: now },
+    { url: "https://picsum.photos/seed/food/800/600", caption: "Traditional Flavors", mediaType: "food", uploadedAt: now }
   ];
 
   // Seeding
   updates.forEach(u => addDocumentNonBlocking(collection(db, "trendingUpdates"), u));
   wonders.forEach(w => addDocumentNonBlocking(collection(db, "wonderAttractions"), w));
+  stays.forEach(s => addDocumentNonBlocking(collection(db, "accommodations"), s));
+  media.forEach(m => addDocumentNonBlocking(collection(db, "mediaAssets"), m));
 
   return true;
 }

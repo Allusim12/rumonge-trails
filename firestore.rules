@@ -21,7 +21,6 @@ service cloud.firestore {
     match /trendingUpdates/{updateId} {
       allow read: if true;
       allow create, update, delete: if isAdmin();
-      // Allow users to update likes count by adding their UID
       allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy']);
       
       match /comments/{commentId} {
@@ -36,8 +35,17 @@ service cloud.firestore {
     match /events/{id} { allow read: if true; allow write: if isAdmin(); }
     match /accommodations/{id} { allow read: if true; allow write: if isAdmin(); }
     match /localCuisineSpots/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /transportationOptions/{id} { allow read: if true; allow write: if isAdmin(); }
     match /site_content/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /mediaAssets/{id} { allow read: if true; allow write: if isAdmin(); }
     match /newsletter_subscriptions/{id} { allow create: if true; allow read, write: if isAdmin(); }
+    match /travelTips/{id} { allow read: if true; allow write: if isAdmin(); }
+    
+    match /bookingRequests/{id} {
+      allow create: if isSignedIn();
+      allow read, update, delete: if isAdmin();
+    }
+
     match /reviews/{id} { 
       allow read: if true; 
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;

@@ -2,13 +2,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, Palmtree, Utensils, ArrowRight, Loader2, X } from "lucide-react";
+import { Search, MapPin, Palmtree, Utensils, ArrowRight, Loader2, X, Newspaper, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { useFirestore } from "@/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 export function GlobalSearch() {
   const [queryText, setQueryText] = useState("");
@@ -27,23 +26,30 @@ export function GlobalSearch() {
       const lowerQuery = queryText.toLowerCase();
       
       try {
-        const collections = ["wonderAttractions", "culturalHeritages", "localCuisineSpots"];
+        const collections = [
+          { id: "wonderAttractions", type: "Wonder", path: "/wonders/", icon: <MapPin size={14} /> },
+          { id: "culturalHeritages", type: "Heritage", path: "/heritage", icon: <Palmtree size={14} /> },
+          { id: "localCuisineSpots", type: "Dining", path: "/dining", icon: <Utensils size={14} /> },
+          { id: "trendingUpdates", type: "News", path: "/news", icon: <Newspaper size={14} /> },
+          { id: "events", type: "Event", path: "/events", icon: <Calendar size={14} /> }
+        ];
+
         const allHits: any[] = [];
 
-        for (const col of collections) {
-          const snap = await getDocs(collection(firestore, col));
+        for (const colInfo of collections) {
+          const snap = await getDocs(collection(firestore, colInfo.id));
           snap.forEach(doc => {
             const data = doc.data();
             const text = (data.name || data.title || "").toLowerCase();
-            const desc = (data.description || "").toLowerCase();
+            const desc = (data.description || data.content || "").toLowerCase();
             
             if (text.includes(lowerQuery) || desc.includes(lowerQuery)) {
               allHits.push({
                 id: doc.id,
                 name: data.name || data.title,
-                type: col === "wonderAttractions" ? "Wonder" : col === "culturalHeritages" ? "Heritage" : "Dining",
-                path: col === "wonderAttractions" ? `/wonders/${doc.id}` : col === "culturalHeritages" ? "/heritage" : "/dining",
-                icon: col === "wonderAttractions" ? <MapPin size={14} /> : col === "culturalHeritages" ? <Palmtree size={14} /> : <Utensils size={14} />
+                type: colInfo.type,
+                path: colInfo.id === "wonderAttractions" ? `${colInfo.path}${doc.id}` : colInfo.path,
+                icon: colInfo.icon
               });
             }
           });
@@ -65,7 +71,7 @@ export function GlobalSearch() {
       <div className="relative group">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-primary transition-transform group-focus-within:scale-110" size={20} />
         <Input
-          placeholder="Search wonders, heritage, or local spots..."
+          placeholder="Search wonders, news, heritage, or events..."
           className="h-14 pl-12 pr-12 rounded-2xl border-none shadow-2xl text-lg focus-visible:ring-primary bg-white/90 backdrop-blur-md"
           value={queryText}
           onChange={(e) => setQueryText(e.target.value)}

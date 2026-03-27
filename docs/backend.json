@@ -56,13 +56,40 @@
         "latitude": { "type": "number" },
         "longitude": { "type": "number" },
         "address": { "type": "string" },
+        "rating": { "type": "number" },
+        "imageUrl": { "type": "string" },
         "createdAt": { "type": "string" },
         "updatedAt": { "type": "string" }
+      }
+    },
+    "BookingRequest": {
+      "title": "BookingRequest",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "hotelId": { "type": "string" },
+        "hotelName": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pending", "Contacted", "Closed"] },
+        "requestedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "MediaAsset": {
+      "title": "MediaAsset",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "url": { "type": "string" },
+        "caption": { "type": "string" },
+        "mediaType": { "type": "string", "enum": ["nature", "culture", "leisure", "food"] },
+        "uploadedAt": { "type": "string" }
       }
     }
   },
   "auth": {
-    "providers": ["password", "anonymous"]
+    "providers": ["password", "anonymous", "google"]
   },
   "firestore": {
     "/users/{userId}": {
@@ -81,6 +108,8 @@
       "schema": "NewsComment",
       "description": "Comments on news updates."
     },
-    "/wonderAttractions/{wonderAttractionId}": { "schema": "WonderAttraction", "description": "Attractions." }
+    "/wonderAttractions/{wonderAttractionId}": { "schema": "WonderAttraction", "description": "Attractions." },
+    "/bookingRequests/{requestId}": { "schema": "BookingRequest", "description": "Visitor booking interests." },
+    "/mediaAssets/{assetId}": { "schema": "MediaAsset", "description": "Gallery images." }
   }
 }

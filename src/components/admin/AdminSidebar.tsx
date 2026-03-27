@@ -16,7 +16,8 @@ import {
   MessageSquare,
   Home,
   Landmark,
-  Newspaper
+  Newspaper,
+  ClipboardList
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -28,6 +29,7 @@ const navItems = [
   { id: "site_content", label: "Homepage Hero", icon: Home },
   { id: "site_content_office", label: "Commune Office", icon: Landmark },
   { id: "trendingUpdates", label: "Trending News", icon: Newspaper },
+  { id: "bookingRequests", label: "Booking Requests", icon: ClipboardList },
   { id: "wonderAttractions", label: "Wonders", icon: Map },
   { id: "culturalHeritages", label: "Heritage", icon: Palmtree },
   { id: "events", label: "Events", icon: Calendar },
