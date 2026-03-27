@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
+  // Redirect if already logged in
   useEffect(() => {
     if (user && !isUserLoading) {
       router.push("/profile");
@@ -39,26 +40,40 @@ export default function LoginPage() {
     if (!auth || isSubmitting) return;
 
     setIsSubmitting(true);
+    console.log(`Attempting ${isRegistering ? 'registration' : 'login'} for:`, email);
+
     try {
       if (isRegistering) {
         await createUserWithEmailAndPassword(auth, email, password);
         toast({ 
-          title: "Welcome!", 
-          description: "Your account has been created successfully." 
+          title: "Account Created!", 
+          description: "Welcome to Rumonge Cultural Trails." 
         });
       } else {
         await signInWithEmailAndPassword(auth, email, password);
         toast({ 
           title: "Welcome Back!", 
-          description: "Signed in successfully." 
+          description: "Successfully signed in." 
         });
       }
     } catch (error: any) {
       console.error("Auth error:", error);
+      let message = "An unexpected error occurred.";
+      
+      if (error.code === 'auth/operation-not-allowed') {
+        message = "This sign-in method is not enabled in the Firebase Console.";
+      } else if (error.code === 'auth/email-already-in-use') {
+        message = "This email is already registered. Try logging in instead.";
+      } else if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        message = "Invalid email or password.";
+      } else {
+        message = error.message || message;
+      }
+
       toast({
         variant: "destructive",
         title: "Authentication Failed",
-        description: error.message || "Please check your credentials and try again.",
+        description: message,
       });
     } finally {
       setIsSubmitting(false);
@@ -80,7 +95,9 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Google Sign-In Failed",
-        description: "Unable to sign in with Google. Ensure popups are enabled.",
+        description: error.code === 'auth/popup-blocked' 
+          ? "The sign-in popup was blocked by your browser." 
+          : "Could not connect to Google. Ensure the provider is enabled in Firebase.",
       });
     } finally {
       setIsSubmitting(false);
@@ -94,13 +111,13 @@ export default function LoginPage() {
       await signInAnonymously(auth);
       toast({ 
         title: "Guest Session", 
-        description: "You are now browsing as a temporary guest." 
+        description: "You are now browsing as a guest traveler." 
       });
     } catch (error: any) {
       toast({ 
         variant: "destructive", 
         title: "Guest Access Failed", 
-        description: error.message 
+        description: "Guest login is currently disabled or unavailable." 
       });
     } finally {
       setIsSubmitting(false);
@@ -118,34 +135,38 @@ export default function LoginPage() {
               <Compass size={32} />
             </div>
             <CardTitle className="font-headline text-3xl">
-              {isRegistering ? "Join Rumonge Trails" : "Welcome Back"}
+              {isRegistering ? "Join the Journey" : "Welcome Back"}
             </CardTitle>
             <CardDescription>
               {isRegistering 
-                ? "Start your journey and save your favorite discoveries." 
-                : "Sign in to access your saved itineraries and wishlist."}
+                ? "Create an account to save your favorite Rumonge spots." 
+                : "Sign in to access your itineraries and profile."}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAuth} className="space-y-4">
-              <Input
-                type="email"
-                placeholder="Email Address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="rounded-xl h-12"
-                required
-                disabled={isSubmitting}
-              />
-              <Input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="rounded-xl h-12"
-                required
-                disabled={isSubmitting}
-              />
+              <div className="space-y-2">
+                <Input
+                  type="email"
+                  placeholder="Email Address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="rounded-xl h-12"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="space-y-2">
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="rounded-xl h-12"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
               <Button 
                 type="submit" 
                 className="w-full h-12 rounded-xl font-bold text-lg"
@@ -211,7 +232,7 @@ export default function LoginPage() {
                 className="w-full text-sm text-primary font-bold hover:underline pt-4"
                 disabled={isSubmitting}
               >
-                {isRegistering ? "Already have an account? Sign In" : "New here? Create an account"}
+                {isRegistering ? "Already have an account? Sign In" : "New here? Join our community"}
               </button>
             </div>
           </CardContent>
