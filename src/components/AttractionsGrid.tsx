@@ -15,6 +15,15 @@ import { WishlistButton } from "@/components/WishlistButton";
 
 const staticWonders = [
   {
+    id: "static-5",
+    name: "Amashuha (Mugara Hot Springs)",
+    type: "Natural Wonder",
+    address: "Zone Mugara, Rumonge",
+    description: "Famous natural hot springs located in Mugara zone. These therapeutic thermal waters are a must-visit for relaxation and health, situated beautifully near the lake.",
+    image: "nature-trail",
+    rating: 4.9
+  },
+  {
     id: "static-1",
     name: "Saga Resort Beach",
     type: "Relaxation",
@@ -52,7 +61,7 @@ const staticWonders = [
   }
 ];
 
-const categories = ["All", "Relaxation", "Adventure", "Culture", "Nature", "Beach"];
+const categories = ["All", "Natural Wonder", "Relaxation", "Adventure", "Culture", "Nature", "Beach"];
 
 export function AttractionsGrid() {
   const firestore = useFirestore();
