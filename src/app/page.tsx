@@ -11,9 +11,10 @@ import { LanguageGuide } from "@/components/LanguageGuide";
 import { ChatGuide } from "@/components/ChatGuide";
 import { Footer } from "@/components/Footer";
 import { EventsList } from "@/components/EventsList";
-import { Calendar, Music, TreePalm, ArrowRight, Quote, Sparkles } from "lucide-react";
+import { Calendar, Music, TreePalm, ArrowRight, Quote, Sparkles, Newspaper } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { TrendingList } from "@/components/TrendingList";
 
 export default function Home() {
   return (
@@ -26,6 +27,22 @@ export default function Home() {
           <GlobalSearch />
         </div>
       </div>
+
+      {/* Trending Updates Preview */}
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <span className="text-primary font-bold uppercase tracking-widest text-sm mb-4 block">Real-time Pulse</span>
+              <h2 className="font-headline text-4xl md:text-5xl font-bold">Trending <span className="text-accent italic">in Rumonge</span></h2>
+            </div>
+            <Button variant="outline" className="rounded-full px-8 hidden md:flex" asChild>
+              <Link href="/news">All Updates <Newspaper className="ml-2" size={16} /></Link>
+            </Button>
+          </div>
+          <TrendingList />
+        </div>
+      </section>
 
       {/* Value Proposition */}
       <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
@@ -76,55 +93,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Preview Sections */}
-      <div className="space-y-0">
-        <section className="relative">
-          <AttractionsGrid />
-          <div className="max-w-7xl mx-auto px-6 pb-24 flex justify-center">
-            <Button variant="outline" className="rounded-full px-10 py-6 h-auto text-lg group border-primary text-primary hover:bg-primary hover:text-white" asChild>
-              <Link href="/wonders">
-                Explore All Wonders
-                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
+      <AttractionsGrid />
+      <HeritageSection />
+      <Gallery />
+      <LanguageGuide />
+
+      <section id="events" className="py-24 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-accent font-bold uppercase tracking-widest text-sm mb-4 block">Save the Date</span>
+            <h2 className="font-headline text-4xl md:text-5xl font-bold mb-4">Upcoming <span className="text-primary italic">Festivals</span></h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">Join the local celebrations that make Rumonge vibrant year-round.</p>
           </div>
-        </section>
-
-        <section className="bg-secondary/10">
-          <HeritageSection />
-          <div className="max-w-7xl mx-auto px-6 pb-24 flex justify-center">
-             <Button className="rounded-full px-10 py-6 h-auto text-lg group shadow-xl" asChild>
-              <Link href="/heritage">
-                Deep Dive into Culture
-                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
-          </div>
-        </section>
-
-        <LanguageGuide />
-
-        <Gallery />
-
-        <section id="events" className="py-24 px-6 bg-white">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <span className="text-accent font-bold uppercase tracking-widest text-sm mb-4 block">Save the Date</span>
-              <h2 className="font-headline text-4xl md:text-5xl font-bold mb-4">Upcoming <span className="text-primary italic">Festivals</span></h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">Join the local celebrations that make Rumonge vibrant year-round.</p>
-            </div>
-            <EventsList />
-            <div className="mt-20 flex justify-center">
-              <Button variant="outline" className="rounded-full px-10 py-6 h-auto border-2 group" asChild>
-                <Link href="/events" className="flex items-center gap-2">
-                  Full Events Calendar
-                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-all" />
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-      </div>
+          <EventsList />
+        </div>
+      </section>
 
       <ChatGuide />
       <Footer />

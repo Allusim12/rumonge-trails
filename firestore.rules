@@ -1,98 +1,49 @@
-/**
- * Rumonge Cultural Trails: Firestore Security Rules
- *
- * CORE PHILOSOPHY:
- * This ruleset implements a robust security model centered on Authorization Independence and Structural Segregation. 
- * It ensures that private user data is strictly isolated while public tourism content remains highly 
- * accessible but protected from unauthorized modification.
- *
- * DATA STRUCTURE:
- * 1. User-Centric Data: Located under `/users/{userId}/...`. Access is restricted to the authenticated 
- *    user whose UID matches the `{userId}` path parameter.
- * 2. Public Content: Top-level collections like `wonderAttractions`, `events`, and `accommodations` 
- *    are publicly readable to provide a seamless guest experience.
- * 3. Administrative Control: A dedicated `/roles_admin` collection serves as the source of truth for 
- *    database-wide administrative permissions.
- * 4. User-Generated Feedback: The `/reviews` collection allows public reading but restricts 
- *    modifications to the original author.
- */
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // --- GLOBAL HELPER FUNCTIONS ---
-
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
-    }
-
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
-    // --- COLLECTION RULES ---
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isAdmin() { return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)); }
 
     match /users/{userId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isOwner(userId) && resource != null && request.resource.data.id == resource.data.id;
-      allow delete: if false;
+      allow update: if isOwner(userId);
     }
 
     match /roles_admin/{adminId} {
       allow get: if isOwner(adminId) || isAdmin();
-      // PROTOTYPE ONLY: Allow users to promote themselves for testing.
-      // In production, this would be restricted to isAdmin() only.
       allow create: if isOwner(adminId); 
       allow list, update, delete: if isAdmin();
     }
 
-    match /newsletter_subscriptions/{id} {
-      allow create: if true;
-      allow read, write: if isAdmin();
-    }
-
-    match /{collection}/{id} {
-      function isPublicCollection() {
-        return collection in [
-          "mediaAssets", "wonderAttractions", "culturalHeritages", 
-          "events", "accommodations", "transportationOptions", 
-          "localCuisineSpots", "travelTips", "reviews", "site_content"
-        ];
+    match /trendingUpdates/{updateId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+      // Allow users to update likes count by adding their UID
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy']);
+      
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       }
-
-      allow get, list: if isPublicCollection();
-      allow create, update, delete: if isPublicCollection() && isAdmin();
     }
 
-    match /users/{userId}/itineraries/{itineraryId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
-    }
-
-    match /users/{userId}/savedItems/{savedItemId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if false;
-      allow delete: if isExistingOwner(userId);
-    }
-
-    match /reviews/{reviewId} {
-      allow get, list: if true;
+    match /wonderAttractions/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /culturalHeritages/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /events/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /accommodations/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /localCuisineSpots/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /site_content/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /newsletter_subscriptions/{id} { allow create: if true; allow read, write: if isAdmin(); }
+    match /reviews/{id} { 
+      allow read: if true; 
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid && request.resource.data.userId == resource.data.userId;
-      allow delete: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
+    match /users/{userId}/itineraries/{id} { allow read, write: if isOwner(userId); }
+    match /users/{userId}/savedItems/{id} { allow read, write: if isOwner(userId); }
   }
 }
