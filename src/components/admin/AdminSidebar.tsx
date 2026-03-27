@@ -10,7 +10,8 @@ import {
   Palmtree, 
   Utensils, 
   Lightbulb,
-  LayoutDashboard
+  Bus,
+  Image as ImageIcon
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -24,7 +25,9 @@ const navItems = [
   { id: "events", label: "Events", icon: Calendar },
   { id: "accommodations", label: "Stays", icon: Hotel },
   { id: "localCuisineSpots", label: "Dining", icon: Utensils },
+  { id: "transportationOptions", label: "Transport", icon: Bus },
   { id: "travelTips", label: "Tips", icon: Lightbulb },
+  { id: "mediaAssets", label: "Media", icon: ImageIcon },
 ];
 
 export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {

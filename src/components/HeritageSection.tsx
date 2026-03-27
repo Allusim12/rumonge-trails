@@ -4,31 +4,39 @@
 import React from "react";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Music, Palette, Users, Heart } from "lucide-react";
+import { Music, Palette, Users, Heart, Loader2 } from "lucide-react";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy, limit } from "firebase/firestore";
 
-const traditions = [
+const fallbackTraditions = [
   {
-    icon: <Music className="text-accent" size={32} />,
     title: "Traditional Dance & Drumming",
-    desc: "The heartbeat of Rumonge, where local troops perform the vibrant dances of the lakeside people."
+    description: "The heartbeat of Rumonge, where local troops perform the vibrant dances of the lakeside people."
   },
   {
-    icon: <Palette className="text-accent" size={32} />,
     title: "Artisanal Basketry",
-    desc: "Intricate weaving techniques passed down through generations, creating functional and artistic pieces."
-  },
-  {
-    icon: <Users className="text-accent" size={32} />,
-    title: "Community Festivals",
-    desc: "Vibrant celebrations of the harvest and the lake's bounty, uniting visitors and locals."
+    description: "Intricate weaving techniques passed down through generations, creating functional and artistic pieces."
   }
 ];
 
 export function HeritageSection() {
+  const firestore = useFirestore();
   const heritageImg = PlaceHolderImages.find(img => img.id === "burundi-drums");
 
+  const heritageQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "culturalHeritages"), orderBy("createdAt", "desc"), limit(3));
+  }, [firestore]);
+
+  const { data: dbHeritage, isLoading } = useCollection(heritageQuery);
+
+  const displayHeritage = React.useMemo(() => {
+    if (dbHeritage && dbHeritage.length > 0) return dbHeritage;
+    return fallbackTraditions;
+  }, [dbHeritage]);
+
   return (
-    <section id="heritage" className="py-24 px-6 overflow-hidden">
+    <section id="heritage" className="py-24 px-6 overflow-hidden bg-background">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="relative">
@@ -60,23 +68,26 @@ export function HeritageSection() {
             </h2>
             <p className="font-body text-lg text-muted-foreground mb-10 leading-relaxed">
               Rumonge isn't just a location; it's a living museum of Burundian culture. 
-              From the rhythmic resonance of the drums to the delicate hands of local weavers, 
-              every corner of our commune tells a story of resilience and beauty.
+              From the rhythmic resonance of the drums to the delicate hands of local weavers.
             </p>
 
-            <div className="space-y-8">
-              {traditions.map((t, idx) => (
-                <div key={idx} className="flex gap-6 items-start group">
-                  <div className="bg-accent/10 p-4 rounded-2xl group-hover:bg-accent group-hover:text-white transition-all duration-300">
-                    {t.icon}
+            {isLoading ? (
+              <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
+            ) : (
+              <div className="space-y-8">
+                {displayHeritage.map((t, idx) => (
+                  <div key={idx} className="flex gap-6 items-start group">
+                    <div className="bg-accent/10 p-4 rounded-2xl group-hover:bg-accent group-hover:text-white transition-all duration-300 text-accent">
+                      {idx % 2 === 0 ? <Music size={32} /> : <Palette size={32} />}
+                    </div>
+                    <div>
+                      <h3 className="font-headline text-xl font-bold mb-2 group-hover:text-primary transition-colors">{t.name || t.title}</h3>
+                      <p className="font-body text-muted-foreground">{t.description}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-headline text-xl font-bold mb-2">{t.title}</h3>
-                    <p className="font-body text-muted-foreground">{t.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             <button className="mt-12 bg-accent text-white px-8 py-4 rounded-full font-bold hover:shadow-lg transition-all hover:scale-105">
               Discover Local Stories

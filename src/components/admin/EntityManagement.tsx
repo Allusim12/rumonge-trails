@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from "react";
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Edit2, X, Check, Save, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Edit2, X, Save, Calendar as CalendarIcon, MapPin, Globe, Phone, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface EntityManagementProps {
@@ -44,7 +45,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
     } else {
       data.createdAt = serverTimestamp();
       addDocumentNonBlocking(collection(firestore, collectionName), data);
-      toast({ title: "Created", description: "New item added to Rumonge Trails." });
+      toast({ title: "Created", description: "New item added successfully." });
     }
 
     resetForm();
@@ -80,26 +81,26 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
       {!isAdding ? (
         <Button onClick={() => setIsAdding(true)} className="rounded-xl flex gap-2">
           <Plus size={18} />
-          Add New {collectionName.replace(/s$/, '')}
+          Add New {collectionName.replace(/s$/, '').replace(/Options$/, 'Option').replace(/Heritages$/, 'Heritage')}
         </Button>
       ) : (
         <Card className="border-none shadow-xl">
           <CardContent className="pt-6">
-            <form onSubmit={handleSave} className="space-y-4">
+            <form onSubmit={handleSave} className="space-y-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-lg">{editingId ? 'Edit' : 'Add New'} {collectionName}</h3>
+                <h3 className="font-bold text-xl">{editingId ? 'Edit' : 'Add New'} {collectionName}</h3>
                 <Button type="button" variant="ghost" size="icon" onClick={resetForm}>
                   <X size={20} />
                 </Button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase text-muted-foreground">Name / Title</label>
                   <Input 
                     required 
                     value={formData.name || formData.title || ""} 
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData({...formData, name: e.target.value, title: e.target.value})}
                     placeholder="Enter name..."
                     className="rounded-xl"
                   />
@@ -108,7 +109,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                   <label className="text-xs font-bold uppercase text-muted-foreground">Type / Category</label>
                   <Input 
                     value={formData.type || formData.category || formData.eventType || ""} 
-                    onChange={(e) => setFormData({...formData, type: e.target.value})}
+                    onChange={(e) => setFormData({...formData, type: e.target.value, category: e.target.value, eventType: e.target.value})}
                     placeholder="e.g. Nature, Festival..."
                     className="rounded-xl"
                   />
@@ -116,70 +117,132 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase text-muted-foreground">Description</label>
+                <label className="text-xs font-bold uppercase text-muted-foreground">Description / Content</label>
                 <Textarea 
                   required
-                  value={formData.description || formData.content || ""} 
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  value={formData.description || formData.content || formData.history || ""} 
+                  onChange={(e) => setFormData({...formData, description: e.target.value, content: e.target.value, history: e.target.value})}
                   placeholder="Details about this item..."
-                  className="rounded-xl min-h-[100px]"
+                  className="rounded-xl min-h-[120px]"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-muted-foreground">Address / Location</label>
-                  <Input 
-                    value={formData.address || formData.locationName || ""} 
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    className="rounded-xl"
-                  />
+              {/* Conditional Fields based on collection */}
+              {(collectionName === 'events') && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Start Date</label>
+                    <Input 
+                      type="datetime-local"
+                      value={formData.startDate || ""} 
+                      onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">End Date</label>
+                    <Input 
+                      type="datetime-local"
+                      value={formData.endDate || ""} 
+                      onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                      className="rounded-xl"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-muted-foreground">Latitude</label>
-                  <Input 
-                    type="number" step="any"
-                    value={formData.latitude || ""} 
-                    onChange={(e) => setFormData({...formData, latitude: parseFloat(e.target.value)})}
-                    className="rounded-xl"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-muted-foreground">Longitude</label>
-                  <Input 
-                    type="number" step="any"
-                    value={formData.longitude || ""} 
-                    onChange={(e) => setFormData({...formData, longitude: parseFloat(e.target.value)})}
-                    className="rounded-xl"
-                  />
-                </div>
-              </div>
+              )}
 
-              <Button type="submit" className="w-full h-12 rounded-xl font-bold flex gap-2">
-                <Save size={18} />
-                {editingId ? "Update Item" : "Create Item"}
+              {(collectionName === 'accommodations' || collectionName === 'localCuisineSpots' || collectionName === 'wonderAttractions') && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Address / Location</label>
+                    <Input 
+                      value={formData.address || formData.locationName || ""} 
+                      onChange={(e) => setFormData({...formData, address: e.target.value, locationName: e.target.value})}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Latitude</label>
+                    <Input 
+                      type="number" step="any"
+                      value={formData.latitude || ""} 
+                      onChange={(e) => setFormData({...formData, latitude: parseFloat(e.target.value)})}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Longitude</label>
+                    <Input 
+                      type="number" step="any"
+                      value={formData.longitude || ""} 
+                      onChange={(e) => setFormData({...formData, longitude: parseFloat(e.target.value)})}
+                      className="rounded-xl"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {(collectionName === 'accommodations' || collectionName === 'localCuisineSpots' || collectionName === 'transportationOptions') && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Contact Phone</label>
+                    <Input 
+                      value={formData.contactPhone || ""} 
+                      onChange={(e) => setFormData({...formData, contactPhone: e.target.value})}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Website URL</label>
+                    <Input 
+                      value={formData.websiteUrl || ""} 
+                      onChange={(e) => setFormData({...formData, websiteUrl: e.target.value})}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-muted-foreground">Additional Info (Fare/Hours)</label>
+                    <Input 
+                      value={formData.fareInformation || formData.operatingHours || ""} 
+                      onChange={(e) => setFormData({...formData, fareInformation: e.target.value, operatingHours: e.target.value})}
+                      placeholder="e.g. 5,000 BIF or 24/7"
+                      className="rounded-xl"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <Button type="submit" className="w-full h-14 rounded-xl font-bold flex gap-2 text-lg shadow-lg">
+                <Save size={20} />
+                {editingId ? "Update Record" : "Create Record"}
               </Button>
             </form>
           </CardContent>
         </Card>
       )}
 
-      <Card className="border-none shadow-lg overflow-hidden">
+      <Card className="border-none shadow-lg overflow-hidden bg-white">
         <Table>
           <TableHeader className="bg-secondary/20">
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead className="hidden md:table-cell">Location</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="font-bold">Name / Title</TableHead>
+              <TableHead className="font-bold">Type / Category</TableHead>
+              <TableHead className="hidden md:table-cell font-bold">Details</TableHead>
+              <TableHead className="text-right font-bold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {entities && entities.length > 0 ? entities.map((entity) => (
               <TableRow key={entity.id} className="hover:bg-secondary/5 transition-colors">
                 <TableCell className="font-bold">{entity.name || entity.title}</TableCell>
-                <TableCell>{entity.type || entity.category || entity.eventType}</TableCell>
-                <TableCell className="hidden md:table-cell text-muted-foreground">{entity.address || entity.locationName || "N/A"}</TableCell>
+                <TableCell>
+                  <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                    {entity.type || entity.category || entity.eventType}
+                  </span>
+                </TableCell>
+                <TableCell className="hidden md:table-cell text-muted-foreground max-w-xs truncate">
+                  {entity.description || entity.content || entity.address || "N/A"}
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(entity)}>
@@ -193,7 +256,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
               </TableRow>
             )) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-12 text-muted-foreground italic">
+                <TableCell colSpan={4} className="text-center py-20 text-muted-foreground italic">
                   No records found in this collection.
                 </TableCell>
               </TableRow>

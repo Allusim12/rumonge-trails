@@ -5,35 +5,44 @@ import React from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ChatGuide } from "@/components/ChatGuide";
-import { Bus, Bike, Ship, MapPin, Clock, Info } from "lucide-react";
+import { Bus, Bike, Ship, MapPin, Clock, Info, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy } from "firebase/firestore";
 
-const options = [
+const fallbackOptions = [
   {
     icon: <Bike className="text-primary" />,
-    title: "Motorcycle Taxis (Boda-Boda)",
-    desc: "The fastest way to move within Rumonge. Negotiate fares before departing. Ideal for short trips and reaching the beaches.",
-    fare: "1,000 - 3,000 BIF",
-    availability: "24/7"
+    name: "Motorcycle Taxis (Boda-Boda)",
+    description: "The fastest way to move within Rumonge. Negotiate fares before departing.",
+    fareInformation: "1,000 - 3,000 BIF",
+    operatingHours: "24/7"
   },
   {
     icon: <Bus className="text-primary" />,
-    title: "Shared Minibuses",
-    desc: "Connecting Rumonge center to Bujumbura and Makamba. They depart when full from the main parking hub.",
-    fare: "5,000 - 8,000 BIF",
-    availability: "Daytime (6 AM - 6 PM)"
-  },
-  {
-    icon: <Ship className="text-primary" />,
-    title: "Lake Ferries & Boats",
-    desc: "Traditional boats and some larger ferries connect Rumonge to Nyanza-Lac and other lakeside villages.",
-    fare: "Varies by route",
-    availability: "Scheduled / Charter"
+    name: "Shared Minibuses",
+    description: "Connecting Rumonge center to Bujumbura and Makamba.",
+    fareInformation: "5,000 - 8,000 BIF",
+    operatingHours: "6 AM - 6 PM"
   }
 ];
 
 export default function TransportPage() {
+  const firestore = useFirestore();
+
+  const transportQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, "transportationOptions"), orderBy("createdAt", "desc"));
+  }, [firestore]);
+
+  const { data: dbTransport, isLoading } = useCollection(transportQuery);
+
+  const displayOptions = React.useMemo(() => {
+    if (dbTransport && dbTransport.length > 0) return dbTransport;
+    return fallbackOptions;
+  }, [dbTransport]);
+
   return (
     <main className="min-h-screen pt-20 bg-secondary/5">
       <Navigation />
@@ -49,31 +58,35 @@ export default function TransportPage() {
       </div>
 
       <section className="py-24 px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-          {options.map((opt, idx) => (
-            <Card key={idx} className="border-none shadow-xl bg-white">
-              <CardHeader>
-                <div className="bg-secondary/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
-                  {opt.icon}
-                </div>
-                <CardTitle className="font-headline text-2xl">{opt.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <p className="text-muted-foreground leading-relaxed">{opt.desc}</p>
-                <div className="flex gap-4">
-                  <div className="bg-secondary/10 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-tight">
-                    <span className="block text-[10px] text-muted-foreground">Estimated Fare</span>
-                    {opt.fare}
+        {isLoading ? (
+          <div className="flex justify-center py-20"><Loader2 className="animate-spin text-primary" size={40} /></div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+            {displayOptions.map((opt, idx) => (
+              <Card key={idx} className="border-none shadow-xl bg-white group hover:-translate-y-1 transition-all">
+                <CardHeader>
+                  <div className="bg-secondary/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 text-primary">
+                    {(opt as any).icon || <MapPin />}
                   </div>
-                  <div className="bg-secondary/10 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-tight">
-                    <span className="block text-[10px] text-muted-foreground">Availability</span>
-                    {opt.availability}
+                  <CardTitle className="font-headline text-2xl group-hover:text-primary transition-colors">{opt.name}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <p className="text-muted-foreground leading-relaxed">{opt.description}</p>
+                  <div className="flex gap-4">
+                    <div className="bg-secondary/10 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-tight">
+                      <span className="block text-[10px] text-muted-foreground">Fare Info</span>
+                      {opt.fareInformation}
+                    </div>
+                    <div className="bg-secondary/10 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-tight">
+                      <span className="block text-[10px] text-muted-foreground">Hours</span>
+                      {opt.operatingHours}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           <div className="bg-white p-12 rounded-3xl shadow-xl border border-primary/10">
