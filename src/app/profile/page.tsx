@@ -1,15 +1,13 @@
-
 "use client";
 
 import React, { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { useUser, useAuth, useFirestore, useCollection, useMemoFirebase, useDoc } from "@/firebase";
-import { collection, query, orderBy, limit, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
+import { collection, query, orderBy, limit, doc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/avatar"; // Corrected path
-import { Avatar as ShAvatar, AvatarFallback as ShAvatarFallback, AvatarImage as ShAvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, Settings, Heart, Map, Clock, ChevronRight, Sparkles, ShieldCheck, Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
@@ -65,24 +63,25 @@ export default function ProfilePage() {
     toast({ title: "Removed", description: "Item removed from your wishlist." });
   };
 
-  const handleBecomeAdmin = () => {
+  const handleBecomeAdmin = async () => {
     if (!firestore || !user) return;
     setIsPromoting(true);
     
-    const adminRef = doc(firestore, "roles_admin", user.uid);
-    setDocumentNonBlocking(adminRef, {
-      id: user.uid,
-      email: user.email,
-      promotedAt: serverTimestamp(),
-    }, { merge: true });
-    
-    setTimeout(() => {
-      setIsPromoting(false);
+    try {
+      const adminRef = doc(firestore, "roles_admin", user.uid);
+      await setDocumentNonBlocking(adminRef, {
+        id: user.uid,
+        email: user.email,
+        promotedAt: serverTimestamp(),
+      }, { merge: true });
+      
       toast({
         title: "Admin Access Granted",
         description: "You now have access to the Admin Dashboard.",
       });
-    }, 1000);
+    } finally {
+      setIsPromoting(false);
+    }
   };
 
   if (isUserLoading) {
@@ -107,12 +106,12 @@ export default function ProfilePage() {
           <div className="lg:col-span-4 space-y-6">
             <Card className="border-none shadow-xl bg-white">
               <CardContent className="pt-10 pb-8 text-center">
-                <ShAvatar className="w-24 h-24 mx-auto mb-4 border-4 border-white shadow-lg">
-                  <ShAvatarImage src={user.photoURL || ""} />
-                  <ShAvatarFallback className="text-2xl bg-primary text-white">
+                <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-white shadow-lg">
+                  <AvatarImage src={user.photoURL || ""} />
+                  <AvatarFallback className="text-2xl bg-primary text-white">
                     {user.email?.[0].toUpperCase()}
-                  </ShAvatarFallback>
-                </ShAvatar>
+                  </AvatarFallback>
+                </Avatar>
                 <h2 className="font-headline text-2xl font-bold">{user.displayName || "Explorer"}</h2>
                 <p className="text-muted-foreground text-sm mb-6">{user.email}</p>
                 <div className="flex flex-col gap-3">

@@ -6,8 +6,8 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useAuth, useUser, errorEmitter } from "@/firebase";
-import { initiateEmailSignIn, initiateEmailSignUp, initiateAnonymousSignIn, initiateGoogleSignIn } from "@/firebase/non-blocking-login";
+import { useAuth, useUser } from "@/firebase";
+import { signInAnonymously, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { Compass, LogIn, UserPlus, Ghost, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -23,51 +23,66 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const handleAuthError = (error: Error) => {
-      setIsSubmitting(false);
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: error.message || "Something went wrong. Please try again.",
-      });
-    };
-
-    errorEmitter.on('auth-error', handleAuthError);
-    return () => errorEmitter.off('auth-error', handleAuthError);
-  }, [toast]);
-
-  useEffect(() => {
     if (user && !isUserLoading) {
-      toast({
-        title: "Welcome!",
-        description: isRegistering ? "Account created successfully." : "Signed in successfully.",
-      });
       router.push("/profile");
     }
-  }, [user, isUserLoading, router, isRegistering, toast]);
+  }, [user, isUserLoading, router]);
 
-  const handleAuth = (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || isSubmitting) return;
 
     setIsSubmitting(true);
-    if (isRegistering) {
-      initiateEmailSignUp(auth, email, password);
-    } else {
-      initiateEmailSignIn(auth, email, password);
+    try {
+      if (isRegistering) {
+        await createUserWithEmailAndPassword(auth, email, password);
+        toast({ title: "Welcome!", description: "Account created successfully." });
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+        toast({ title: "Welcome Back!", description: "Signed in successfully." });
+      }
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: error.message || "Failed to authenticate. Please check your credentials or if the provider is enabled in Firebase Console.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     if (!auth || isSubmitting) return;
     setIsSubmitting(true);
-    initiateGoogleSignIn(auth);
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      toast({ title: "Success", description: "Signed in with Google." });
+    } catch (error: any) {
+      console.error("Google Auth error:", error);
+      toast({
+        variant: "destructive",
+        title: "Google Sign-In Failed",
+        description: "Please ensure popups are allowed and Google Auth is enabled in the Firebase Console.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleAnonymous = () => {
+  const handleAnonymous = async () => {
     if (!auth || isSubmitting) return;
     setIsSubmitting(true);
-    initiateAnonymousSignIn(auth);
+    try {
+      await signInAnonymously(auth);
+      toast({ title: "Guest Access", description: "Logged in as a temporary guest." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Guest Access Failed", description: error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

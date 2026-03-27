@@ -1,3 +1,4 @@
+"use client";
 
 import { Navigation } from "@/components/Navigation";
 import { Hero } from "@/components/Hero";
@@ -8,7 +9,7 @@ import { LanguageGuide } from "@/components/LanguageGuide";
 import { ChatGuide } from "@/components/ChatGuide";
 import { Footer } from "@/components/Footer";
 import { EventsList } from "@/components/EventsList";
-import { Calendar, Music, TreePalm, ArrowRight } from "lucide-react";
+import { Calendar, Music, TreePalm, ArrowRight, Quote } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -46,7 +47,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Preview Sections with Links to Full Pages */}
+      {/* Phrase of the Day Spotlight */}
+      <section className="py-12 bg-accent/5 border-y">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-widest text-[10px] mb-4">
+            <Quote size={12} />
+            Phrase of the Day
+          </div>
+          <h2 className="font-headline text-4xl font-bold text-foreground mb-2">"Amahoro asage"</h2>
+          <p className="text-muted-foreground italic mb-6">Translation: "Peace be with you always"</p>
+          <Button variant="ghost" className="text-accent font-bold hover:bg-accent/10 rounded-full" asChild>
+            <Link href="/guide">Explore Language Hub</Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* Preview Sections */}
       <div className="space-y-0">
         <section className="relative">
           <AttractionsGrid />

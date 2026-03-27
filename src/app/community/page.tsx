@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -11,7 +10,7 @@ import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, MessageSquare, User } from "lucide-react";
+import { Star, MessageSquare, User, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 
 export default function CommunityPage() {
@@ -19,6 +18,7 @@ export default function CommunityPage() {
   const { user } = useUser();
   const [comment, setComment] = useState("");
   const [rating, setRating] = useState(5);
+  const [isPosting, setIsPosting] = useState(false);
 
   const reviewsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -27,22 +27,27 @@ export default function CommunityPage() {
 
   const { data: reviews, isLoading } = useCollection(reviewsQuery);
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !comment.trim() || !firestore) return;
+    if (!user || !comment.trim() || !firestore || isPosting) return;
 
-    addDocumentNonBlocking(collection(firestore, "reviews"), {
-      userId: user.uid,
-      userName: user.displayName || "Anonymous Traveler",
-      targetEntityType: "General",
-      targetEntityId: "rumonge-commune",
-      rating,
-      comment: comment.trim(),
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-
-    setComment("");
+    setIsPosting(true);
+    try {
+      await addDocumentNonBlocking(collection(firestore, "reviews"), {
+        userId: user.uid,
+        userName: user.displayName || "Anonymous Traveler",
+        targetEntityType: "General",
+        targetEntityId: "rumonge-commune",
+        rating,
+        comment: comment.trim(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      setComment("");
+      setRating(5);
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   return (
@@ -89,15 +94,16 @@ export default function CommunityPage() {
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                       className="min-h-[150px] rounded-xl"
+                      disabled={isPosting}
                     />
-                    <Button type="submit" className="w-full rounded-xl font-bold">
-                      Post Review
+                    <Button type="submit" className="w-full rounded-xl font-bold" disabled={isPosting}>
+                      {isPosting ? <Loader2 className="animate-spin mr-2" /> : "Post Review"}
                     </Button>
                   </form>
                 ) : (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground mb-4">Please log in to share your experience.</p>
-                    <Button variant="outline" className="rounded-xl" asChild>
+                    <Button variant="outline" className="rounded-xl w-full" asChild>
                       <a href="/login">Login to Rumonge Trails</a>
                     </Button>
                   </div>
@@ -110,10 +116,12 @@ export default function CommunityPage() {
           <div className="lg:col-span-8 space-y-6">
             <h2 className="font-headline text-3xl font-bold mb-8">What People Are Saying</h2>
             {isLoading ? (
-              <div className="text-center py-12">Loading stories...</div>
+              <div className="flex justify-center py-12">
+                <Loader2 className="animate-spin text-primary w-10 h-10" />
+              </div>
             ) : reviews && reviews.length > 0 ? (
               reviews.map((review: any) => (
-                <Card key={review.id} className="border-none shadow-md overflow-hidden bg-white">
+                <Card key={review.id} className="border-none shadow-md overflow-hidden bg-white hover:shadow-lg transition-all">
                   <CardContent className="p-8">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
