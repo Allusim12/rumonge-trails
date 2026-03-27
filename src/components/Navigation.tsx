@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -32,7 +31,7 @@ export function Navigation() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      setScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -47,7 +46,7 @@ export function Navigation() {
     >
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="bg-primary p-2 rounded-lg text-primary-foreground group-hover:scale-110 transition-transform">
+          <div className="bg-primary p-2 rounded-lg text-primary-foreground group-hover:rotate-12 transition-transform">
             <Compass size={24} />
           </div>
           <span className="font-headline font-bold text-xl tracking-tight text-primary">
@@ -56,19 +55,21 @@ export function Navigation() {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden lg:flex items-center gap-6">
-          {NavLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className={cn(
-                "font-body font-medium transition-colors text-[10px] uppercase tracking-widest",
-                scrolled ? "text-foreground/80 hover:text-primary" : "text-white/80 hover:text-white"
-              )}
-            >
-              {link.name}
-            </Link>
-          ))}
+        <div className="hidden md:flex items-center gap-6">
+          <div className="flex gap-4">
+            {NavLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                className={cn(
+                  "font-body font-bold transition-colors text-[10px] uppercase tracking-widest",
+                  scrolled ? "text-foreground/70 hover:text-primary" : "text-white/80 hover:text-white"
+                )}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
           
           <div className="flex items-center gap-3 border-l pl-6 ml-2 border-muted/30">
             {adminRole && (
@@ -78,7 +79,6 @@ export function Navigation() {
                   "p-2 rounded-full transition-all flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest",
                   scrolled ? "text-primary hover:bg-primary/10" : "text-white hover:bg-white/10"
                 )}
-                title="Admin Dashboard"
               >
                 <ShieldCheck size={18} />
                 <span className="hidden lg:inline">Admin</span>
@@ -88,7 +88,7 @@ export function Navigation() {
             {user ? (
               <Link
                 href="/profile"
-                className="bg-primary text-primary-foreground p-2 rounded-full hover:bg-primary/90 transition-all shadow-md"
+                className="bg-primary text-primary-foreground p-2 rounded-full hover:scale-105 transition-all shadow-md"
               >
                 <User size={18} />
               </Link>
@@ -105,50 +105,51 @@ export function Navigation() {
 
         {/* Mobile Menu Toggle */}
         <button
-          className={cn("lg:hidden p-2", scrolled ? "text-foreground" : "text-white")}
+          className={cn("md:hidden p-2", scrolled ? "text-foreground" : "text-white")}
           onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
         >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
 
-      {/* Mobile Nav */}
+      {/* Mobile Nav Overlay */}
       <div
         className={cn(
-          "fixed inset-0 top-[64px] bg-background z-40 lg:hidden transition-transform duration-300 ease-in-out transform",
+          "fixed inset-0 top-[64px] bg-background z-40 md:hidden transition-transform duration-300 ease-in-out transform",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
-        <div className="flex flex-col items-center justify-center h-full gap-6">
+        <div className="flex flex-col items-center justify-center h-full gap-8 p-6">
           {NavLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
               onClick={() => setIsOpen(false)}
-              className="font-headline text-3xl font-bold text-foreground hover:text-primary transition-colors"
+              className="font-headline text-3xl font-bold text-foreground hover:text-primary"
             >
               {link.name}
             </Link>
           ))}
           
-          {adminRole && (
-            <Link
-              href="/admin"
-              onClick={() => setIsOpen(false)}
-              className="text-primary font-bold flex items-center gap-2 text-xl"
-            >
-              <ShieldCheck size={24} /> Admin Console
-            </Link>
-          )}
+          <div className="w-full pt-8 border-t flex flex-col gap-4 items-center">
+            {adminRole && (
+              <Link
+                href="/admin"
+                onClick={() => setIsOpen(false)}
+                className="text-primary font-bold flex items-center gap-2 text-xl"
+              >
+                <ShieldCheck size={24} /> Admin Dashboard
+              </Link>
+            )}
 
-          <Link
-            href={user ? "/profile" : "/login"}
-            onClick={() => setIsOpen(false)}
-            className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-bold text-lg shadow-lg"
-          >
-            {user ? "View Profile" : "Login"}
-          </Link>
+            <Link
+              href={user ? "/profile" : "/login"}
+              onClick={() => setIsOpen(false)}
+              className="w-full bg-primary text-primary-foreground text-center py-4 rounded-2xl font-bold text-xl shadow-lg"
+            >
+              {user ? "Go to Profile" : "Login / Join"}
+            </Link>
+          </div>
         </div>
       </div>
     </nav>
