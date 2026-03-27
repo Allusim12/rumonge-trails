@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, deleteDoc, doc, serverTimestamp, getDoc } from "firebase/firestore";
 import { addDocumentNonBlocking, updateDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,9 +25,13 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
   const [formData, setFormData] = useState<any>({});
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Adjust collection name for "singleton" content stored in site_content
+  const isOffice = collectionName === "site_content_office";
+  const actualCollection = isOffice ? "site_content" : collectionName;
+
   const entityQuery = useMemoFirebase(() => 
-    firestore ? query(collection(firestore, collectionName), orderBy("updatedAt", "desc")) : null
-  , [firestore, collectionName]);
+    firestore ? query(collection(firestore, actualCollection), orderBy("updatedAt", "desc")) : null
+  , [firestore, actualCollection]);
 
   const { data: entities, isLoading } = useCollection(entityQuery);
 
@@ -40,12 +44,17 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
       updatedAt: serverTimestamp(),
     };
 
-    if (editingId) {
-      updateDocumentNonBlocking(doc(firestore, collectionName, editingId), data);
+    // If it's a singleton document like 'hero' or 'office'
+    if (actualCollection === "site_content") {
+      const docId = isOffice ? "office" : "hero";
+      setDocumentNonBlocking(doc(firestore, "site_content", docId), data, { merge: true });
+      toast({ title: "Saved", description: "Homepage section updated." });
+    } else if (editingId) {
+      updateDocumentNonBlocking(doc(firestore, actualCollection, editingId), data);
       toast({ title: "Updated", description: "Record updated successfully." });
     } else {
       data.createdAt = serverTimestamp();
-      addDocumentNonBlocking(collection(firestore, collectionName), data);
+      addDocumentNonBlocking(collection(firestore, actualCollection), data);
       toast({ title: "Created", description: "New record added successfully." });
     }
 
@@ -67,7 +76,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
   const handleDelete = async (id: string) => {
     if (!firestore || !window.confirm("Delete this record?")) return;
     try {
-      await deleteDoc(doc(firestore, collectionName, id));
+      await deleteDoc(doc(firestore, actualCollection, id));
       toast({ title: "Deleted", description: "Record removed." });
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Could not delete." });
@@ -75,6 +84,11 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
   };
 
   const filteredEntities = entities?.filter(e => {
+    // If office, we only want the 'office' doc
+    if (isOffice) return e.id === "office";
+    // If hero, we only want the 'hero' doc
+    if (collectionName === "site_content") return e.id === "hero";
+
     const name = (e.name || e.title || e.email || "").toLowerCase();
     return name.includes(searchTerm.toLowerCase());
   });
@@ -86,10 +100,12 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
     </div>
   );
 
+  const displayTitle = isOffice ? "Commune Office" : collectionName === "site_content" ? "Homepage Hero" : collectionName;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        {!isAdding && (
+        {!isAdding && !isOffice && collectionName !== "site_content" && (
           <Button onClick={() => setIsAdding(true)} className="rounded-xl h-12 px-6 font-bold shadow-lg">
             <Plus size={20} className="mr-2" />
             Add New Record
@@ -114,7 +130,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="font-headline text-3xl font-bold">{editingId ? 'Refine' : 'Add'} Record</h3>
-                  <p className="text-muted-foreground text-sm uppercase font-bold tracking-widest">{collectionName}</p>
+                  <p className="text-muted-foreground text-sm uppercase font-bold tracking-widest">{displayTitle}</p>
                 </div>
                 <Button type="button" variant="ghost" size="icon" onClick={resetForm} className="rounded-full">
                   <X size={24} />
@@ -124,7 +140,9 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Headline / Name</label>
+                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">
+                      {isOffice ? "Administrator Name" : "Headline / Name"}
+                    </label>
                     <Input 
                       required 
                       value={formData.name || formData.title || ""} 
@@ -132,21 +150,25 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                       className="rounded-2xl h-12"
                     />
                   </div>
-                  {collectionName === 'site_content' && (
+                  {(collectionName === 'site_content' || isOffice) && (
                     <div className="space-y-3">
-                      <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Headline Italic (Optional)</label>
+                      <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">
+                        {isOffice ? "Page Title" : "Headline Italic (Optional)"}
+                      </label>
                       <Input 
-                        value={formData.titleItalic || ""} 
-                        onChange={(e) => setFormData({...formData, titleItalic: e.target.value})}
+                        value={formData.titleItalic || formData.title || ""} 
+                        onChange={(e) => setFormData({...formData, titleItalic: e.target.value, title: e.target.value})}
                         className="rounded-2xl h-12"
                       />
                     </div>
                   )}
                   <div className="space-y-3">
-                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Type / Badge / Category</label>
+                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">
+                       {isOffice ? "Role / Subtitle" : "Type / Badge / Category"}
+                    </label>
                     <Input 
-                      value={formData.type || formData.badge || formData.category || ""} 
-                      onChange={(e) => setFormData({...formData, type: e.target.value, badge: e.target.value, category: e.target.value})}
+                      value={formData.type || formData.badge || formData.category || formData.subtitle || ""} 
+                      onChange={(e) => setFormData({...formData, type: e.target.value, badge: e.target.value, category: e.target.value, subtitle: e.target.value})}
                       className="rounded-2xl h-12"
                     />
                   </div>
@@ -154,7 +176,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
 
                 <div className="space-y-3">
                   <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                    <ImageIcon size={14} /> Image URL
+                    <ImageIcon size={14} /> {isOffice ? "Administrator Photo URL" : "Image URL"}
                   </label>
                   <div className="flex gap-4">
                     <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-secondary/30 shrink-0 border">
@@ -171,7 +193,9 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Description / Subtitle / Content</label>
+                <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">
+                   {isOffice ? "Administrator Quote / Mission" : "Description / Subtitle / Content"}
+                </label>
                 <Textarea 
                   required
                   value={formData.description || formData.subtitle || formData.content || ""} 
@@ -216,13 +240,15 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                 </TableCell>
                 <TableCell className="py-6">
                   <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold uppercase">
-                    {entity.type || entity.badge || entity.category || "General"}
+                    {entity.type || entity.badge || entity.category || entity.subtitle || "General"}
                   </span>
                 </TableCell>
                 <TableCell className="text-right py-6 pr-8">
                   <div className="flex justify-end gap-2">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(entity)}><Edit2 size={18} /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(entity.id)}><Trash2 size={18} /></Button>
+                    {!isOffice && collectionName !== "site_content" && (
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(entity.id)}><Trash2 size={18} /></Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

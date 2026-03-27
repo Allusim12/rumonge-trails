@@ -4,11 +4,38 @@ import React from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ChatGuide } from "@/components/ChatGuide";
-import { Building2, User, Mail, MapPin, Phone, ShieldCheck, Landmark, Info } from "lucide-react";
+import { Building2, Landmark, ShieldCheck, MapPin, Mail, Phone, Info, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
+import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
 
 export default function OfficePage() {
+  const firestore = useFirestore();
+
+  const officeDocRef = useMemoFirebase(() => 
+    firestore ? doc(firestore, "site_content", "office") : null
+  , [firestore]);
+
+  const { data: officeData, isLoading } = useDoc(officeDocRef);
+
+  // Fallback defaults
+  const content = {
+    name: officeData?.name || "Augustin MINANI",
+    title: officeData?.title || "Commune Rumonge Office",
+    role: officeData?.subtitle || "Administrator of Rumonge Commune",
+    quote: officeData?.description || "\"Our mission is to foster a Rumonge that thrives through its traditions while embracing modern opportunities for all our citizens and visitors.\"",
+    imageUrl: officeData?.imageUrl || "https://picsum.photos/seed/admin/400/400"
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-secondary/10">
+        <Loader2 className="animate-spin text-primary w-12 h-12" />
+      </div>
+    );
+  }
+
   return (
     <main className="min-h-screen pt-20 bg-secondary/5">
       <Navigation />
@@ -21,7 +48,7 @@ export default function OfficePage() {
             <span className="text-xs font-bold uppercase tracking-widest">Official Administration</span>
           </div>
           <h1 className="font-headline text-5xl md:text-7xl font-bold mb-6">
-            Commune <span className="text-secondary italic">Rumonge Office</span>
+            {content.title}
           </h1>
           <p className="text-xl opacity-90 leading-relaxed max-w-2xl font-body">
             Dedicated to the service of the people, the preservation of our cultural heritage, 
@@ -38,19 +65,18 @@ export default function OfficePage() {
             <div className="flex flex-col md:flex-row gap-8 items-center md:items-start bg-white p-8 rounded-[2.5rem] shadow-xl border border-primary/10">
               <div className="relative w-48 h-48 rounded-3xl overflow-hidden shrink-0 shadow-lg border-4 border-white">
                 <Image
-                  src="https://picsum.photos/seed/admin/400/400"
-                  alt="Augustin MINANI"
+                  src={content.imageUrl}
+                  alt={content.name}
                   fill
                   className="object-cover"
                   data-ai-hint="portrait professional man"
                 />
               </div>
               <div className="text-center md:text-left">
-                <span className="text-primary font-bold uppercase tracking-widest text-[10px] mb-2 block">Administrator of Rumonge Commune</span>
-                <h2 className="font-headline text-4xl font-bold mb-4 text-foreground">Augustin <span className="text-primary italic">MINANI</span></h2>
+                <span className="text-primary font-bold uppercase tracking-widest text-[10px] mb-2 block">{content.role}</span>
+                <h2 className="font-headline text-4xl font-bold mb-4 text-foreground">{content.name}</h2>
                 <p className="text-muted-foreground leading-relaxed italic mb-6">
-                  "Our mission is to foster a Rumonge that thrives through its traditions while 
-                  embracing modern opportunities for all our citizens and visitors."
+                  {content.quote}
                 </p>
                 <div className="flex flex-wrap justify-center md:justify-start gap-3">
                    <div className="bg-primary/5 px-4 py-2 rounded-xl text-xs font-bold text-primary border border-primary/10 flex items-center gap-2">

@@ -13,7 +13,8 @@ import {
   Image as ImageIcon,
   Mail,
   MessageSquare,
-  Home
+  Home,
+  Landmark
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -23,6 +24,7 @@ interface AdminSidebarProps {
 
 const navItems = [
   { id: "site_content", label: "Homepage Hero", icon: Home },
+  { id: "site_content_office", label: "Commune Office", icon: Landmark },
   { id: "wonderAttractions", label: "Wonders", icon: Map },
   { id: "culturalHeritages", label: "Heritage", icon: Palmtree },
   { id: "events", label: "Events", icon: Calendar },

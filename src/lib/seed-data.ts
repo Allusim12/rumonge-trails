@@ -22,6 +22,18 @@ export async function seedInitialData(db: Firestore) {
   };
   await setDoc(doc(db, "site_content", "hero"), heroContent);
 
+  // 0b. Site Content (Office)
+  const officeContent = {
+    name: "Augustin MINANI",
+    title: "Commune Rumonge Office",
+    subtitle: "Administrator of Rumonge Commune",
+    description: "\"Our mission is to foster a Rumonge that thrives through its traditions while embracing modern opportunities for all our citizens and visitors.\"",
+    imageUrl: "https://picsum.photos/seed/admin/400/400",
+    updatedAt: now,
+    createdAt: now
+  };
+  await setDoc(doc(db, "site_content", "office"), officeContent);
+
   // 1. Wonders & Attractions
   const wonders = [
     {
