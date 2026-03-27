@@ -139,16 +139,17 @@ export function AttractionsGrid() {
         ) : filteredWonders.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {filteredWonders.map((wonder) => {
-              const imgData = PlaceHolderImages.find(img => img.id === wonder.image || img.id === "rumonge-hero");
+              const staticImg = PlaceHolderImages.find(img => img.id === (wonder as any).image || img.id === "rumonge-hero");
+              const displayImageUrl = wonder.imageUrl || staticImg?.imageUrl || "https://picsum.photos/seed/placeholder/800/600";
+              
               return (
                 <Card key={wonder.id} className="group border-none shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden bg-background">
                   <div className="relative h-64 overflow-hidden">
                     <Image
-                      src={imgData?.imageUrl || "https://picsum.photos/seed/placeholder/800/600"}
+                      src={displayImageUrl}
                       alt={wonder.name}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-700"
-                      data-ai-hint={imgData?.imageHint || "rumonge landscape"}
                     />
                     <Badge className="absolute top-4 left-4 bg-white/90 text-primary border-none font-bold">
                       {wonder.type}

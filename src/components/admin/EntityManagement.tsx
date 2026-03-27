@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Edit2, X, Save, Search, Loader2, Database } from "lucide-react";
+import { Plus, Trash2, Edit2, X, Save, Search, Loader2, Database, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 interface EntityManagementProps {
   collectionName: string;
@@ -133,25 +134,51 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Common Fields */}
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Name / Title</label>
-                  <Input 
-                    required 
-                    value={formData.name || formData.title || ""} 
-                    onChange={(e) => setFormData({...formData, name: e.target.value, title: e.target.value})}
-                    placeholder="Enter name..."
-                    className="rounded-2xl h-12"
-                  />
+                {/* Identity Fields */}
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Name / Title</label>
+                    <Input 
+                      required 
+                      value={formData.name || formData.title || ""} 
+                      onChange={(e) => setFormData({...formData, name: e.target.value, title: e.target.value})}
+                      placeholder="Enter name..."
+                      className="rounded-2xl h-12"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Type / Category</label>
+                    <Input 
+                      value={formData.type || formData.category || formData.eventType || ""} 
+                      onChange={(e) => setFormData({...formData, type: e.target.value, category: e.target.value, eventType: e.target.value})}
+                      placeholder="e.g. Natural Wonder, Festival, Hotel..."
+                      className="rounded-2xl h-12"
+                    />
+                  </div>
                 </div>
+
+                {/* Media Preview & URL */}
                 <div className="space-y-3">
-                  <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Type / Category</label>
-                  <Input 
-                    value={formData.type || formData.category || formData.eventType || ""} 
-                    onChange={(e) => setFormData({...formData, type: e.target.value, category: e.target.value, eventType: e.target.value})}
-                    placeholder="e.g. Natural Wonder, Festival, Hotel..."
-                    className="rounded-2xl h-12"
-                  />
+                  <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                    <ImageIcon size={14} /> Image URL (Replace to change image)
+                  </label>
+                  <div className="flex gap-4">
+                    <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-secondary/30 shrink-0 border">
+                      {formData.imageUrl ? (
+                        <Image src={formData.imageUrl} alt="Preview" fill className="object-cover" />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                          <ImageIcon size={32} />
+                        </div>
+                      )}
+                    </div>
+                    <Input 
+                      value={formData.imageUrl || ""} 
+                      onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
+                      placeholder="https://images.unsplash.com/..."
+                      className="rounded-2xl h-12"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -200,26 +227,17 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                   </>
                 )}
 
-                {/* Contact & Web Info */}
-                {(['accommodations', 'localCuisineSpots', 'transportationOptions', 'wonderAttractions'].includes(collectionName)) && (
-                  <>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Contact Phone</label>
-                      <Input 
-                        value={formData.contactPhone || ""} 
-                        onChange={(e) => setFormData({...formData, contactPhone: e.target.value})}
-                        className="rounded-xl h-10 bg-white"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Website / Social URL</label>
-                      <Input 
-                        value={formData.websiteUrl || ""} 
-                        onChange={(e) => setFormData({...formData, websiteUrl: e.target.value})}
-                        className="rounded-xl h-10 bg-white"
-                      />
-                    </div>
-                  </>
+                {/* Rating & Pricing */}
+                {(['wonderAttractions', 'accommodations', 'localCuisineSpots'].includes(collectionName)) && (
+                   <div className="space-y-3">
+                    <label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Rating (1-5)</label>
+                    <Input 
+                      type="number" step="0.1" max="5" min="1"
+                      value={formData.rating || ""} 
+                      onChange={(e) => setFormData({...formData, rating: parseFloat(e.target.value)})}
+                      className="rounded-xl h-10 bg-white"
+                    />
+                  </div>
                 )}
               </div>
 
@@ -241,7 +259,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
         <Table>
           <TableHeader className="bg-secondary/30">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="font-bold text-foreground py-6">Identity</TableHead>
+              <TableHead className="font-bold text-foreground py-6 pl-8">Identity</TableHead>
               <TableHead className="font-bold text-foreground py-6">Category</TableHead>
               <TableHead className="hidden lg:table-cell font-bold text-foreground py-6">Description Snippet</TableHead>
               <TableHead className="text-right font-bold text-foreground py-6 px-8">Management</TableHead>
@@ -251,9 +269,14 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
             {filteredEntities && filteredEntities.length > 0 ? filteredEntities.map((entity) => (
               <TableRow key={entity.id} className="hover:bg-primary/5 transition-colors border-b-secondary/20">
                 <TableCell className="font-bold py-6 pl-8">
-                  <div className="flex flex-col">
-                    <span className="text-lg">{entity.name || entity.title || entity.email}</span>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-tighter">ID: {entity.id.slice(0, 8)}...</span>
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-secondary/30 border">
+                      {entity.imageUrl && <Image src={entity.imageUrl} alt="" fill className="object-cover" />}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-lg">{entity.name || entity.title || entity.email}</span>
+                      <span className="text-[10px] text-muted-foreground uppercase tracking-tighter">ID: {entity.id.slice(0, 8)}...</span>
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell className="py-6">
@@ -291,7 +314,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                   <div className="flex flex-col items-center gap-4 text-muted-foreground">
                     <Database size={48} className="opacity-20" />
                     <p className="font-headline text-2xl italic">No records found in Firestore.</p>
-                    <p className="text-sm max-w-md mx-auto">Use the <b>Seed Initial Data</b> button in the sidebar to populate this collection with initial Rumonge content.</p>
+                    <p className="text-sm max-w-md mx-auto">Use the <b>Seed Initial Data</b> button in the sidebar to populate all collections with Rumonge content.</p>
                   </div>
                 </TableCell>
               </TableRow>
