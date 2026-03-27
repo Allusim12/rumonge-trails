@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Compass, User, ShieldCheck, Landmark } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Menu, X, Compass, User, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -18,11 +19,20 @@ const NavLinks = [
   { name: "Office", href: "/office" },
 ];
 
+/**
+ * Pages that feature a dark hero/top section where white text is appropriate.
+ */
+const DARK_HERO_PAGES = ["/", "/dining", "/news", "/office", "/community", "/transport"];
+
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
   const { user } = useUser();
   const firestore = useFirestore();
+
+  // Determine if the current page has a dark header background initially
+  const hasDarkHero = DARK_HERO_PAGES.includes(pathname) || pathname.startsWith("/wonders/") || pathname.startsWith("/stays/");
 
   const adminDocRef = useMemoFirebase(() => 
     (firestore && user) ? doc(firestore, "roles_admin", user.uid) : null
@@ -38,11 +48,14 @@ export function Navigation() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Visual logic based on scroll and page theme
+  const isNavLight = scrolled || !hasDarkHero;
+
   return (
     <nav
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 py-4",
-        scrolled ? "bg-background/95 backdrop-blur-md shadow-md py-3" : "bg-transparent"
+        isNavLight ? "bg-background/95 backdrop-blur-md shadow-md py-3" : "bg-transparent"
       )}
     >
       <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -51,7 +64,7 @@ export function Navigation() {
             <Compass size={24} />
           </div>
           <span className="font-headline font-bold text-xl tracking-tight text-primary">
-            Rumonge <span className={cn(scrolled ? "text-foreground" : "text-white")}>Trails</span>
+            Rumonge <span className={cn(isNavLight ? "text-foreground" : "text-white")}>Trails</span>
           </span>
         </Link>
 
@@ -64,7 +77,7 @@ export function Navigation() {
                 href={link.href}
                 className={cn(
                   "font-body font-bold transition-colors text-[10px] uppercase tracking-widest",
-                  scrolled ? "text-foreground/70 hover:text-primary" : "text-white/80 hover:text-white"
+                  isNavLight ? "text-foreground/70 hover:text-primary" : "text-white/80 hover:text-white"
                 )}
               >
                 {link.name}
@@ -78,7 +91,7 @@ export function Navigation() {
                 href="/admin"
                 className={cn(
                   "p-2 rounded-full transition-all flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest",
-                  scrolled ? "text-primary hover:bg-primary/10" : "text-white hover:bg-white/10"
+                  isNavLight ? "text-primary hover:bg-primary/10" : "text-white hover:bg-white/10"
                 )}
               >
                 <ShieldCheck size={18} />
@@ -106,7 +119,7 @@ export function Navigation() {
 
         {/* Mobile Menu Toggle */}
         <button
-          className={cn("md:hidden p-2", scrolled ? "text-foreground" : "text-white")}
+          className={cn("md:hidden p-2", isNavLight ? "text-foreground" : "text-white")}
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
