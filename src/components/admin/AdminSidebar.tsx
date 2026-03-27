@@ -19,12 +19,13 @@ import {
   Newspaper,
   ClipboardList,
   LayoutDashboard,
-  Users
+  ChevronRight
 } from "lucide-react";
 
 interface AdminSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onClose?: () => void;
 }
 
 const groups = [
@@ -59,20 +60,25 @@ const groups = [
   }
 ];
 
-export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
+export function AdminSidebar({ activeTab, onTabChange, onClose }: AdminSidebarProps) {
+  const handleTabClick = (id: string) => {
+    onTabChange(id);
+    if (onClose) onClose();
+  };
+
   return (
-    <nav className="bg-white rounded-3xl p-4 shadow-xl space-y-6 border border-primary/10">
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-secondary pb-4">
-        <div className="bg-primary/10 p-2 rounded-xl text-primary">
+    <nav className="flex flex-col h-full bg-white md:bg-transparent">
+      <div className="flex items-center gap-3 px-4 py-6 border-b border-secondary/50 md:border-none">
+        <div className="bg-primary p-2 rounded-xl text-primary-foreground shadow-lg shadow-primary/20">
           <LayoutDashboard size={20} />
         </div>
         <div>
-          <h2 className="font-headline font-bold text-lg leading-none">Management</h2>
+          <h2 className="font-headline font-bold text-xl leading-none">Management</h2>
           <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Control Panel</p>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="flex-1 overflow-y-auto py-6 space-y-8 px-2 md:px-0">
         {groups.map((group, gIdx) => (
           <div key={gIdx} className="space-y-2">
             <h3 className="px-4 text-[10px] uppercase font-bold text-primary/60 tracking-[0.2em]">
@@ -85,19 +91,22 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => onTabChange(item.id)}
+                    onClick={() => handleTabClick(item.id)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all group",
+                      "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all group",
                       isActive 
-                        ? "bg-primary text-white shadow-md shadow-primary/20" 
-                        : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                        ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                        : "text-muted-foreground hover:bg-white md:hover:bg-secondary/50 hover:text-foreground"
                     )}
                   >
-                    <Icon size={18} className={cn(
-                      "transition-transform group-hover:scale-110",
-                      isActive ? "text-white" : "text-primary/60"
-                    )} />
-                    {item.label}
+                    <div className="flex items-center gap-3">
+                      <Icon size={18} className={cn(
+                        "transition-transform group-hover:scale-110",
+                        isActive ? "text-white" : "text-primary/70"
+                      )} />
+                      {item.label}
+                    </div>
+                    {isActive && <ChevronRight size={14} className="animate-in slide-in-from-left-2" />}
                   </button>
                 );
               })}

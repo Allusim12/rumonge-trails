@@ -10,7 +10,20 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { EntityManagement } from "@/components/admin/EntityManagement";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ShieldAlert, Lock, Database, Sparkles, MapPin, MessageSquare, ClipboardList, TrendingUp } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  Loader2, 
+  ShieldAlert, 
+  Lock, 
+  Database, 
+  Sparkles, 
+  MapPin, 
+  MessageSquare, 
+  ClipboardList, 
+  TrendingUp,
+  Menu,
+  Settings2
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { seedInitialData } from "@/lib/seed-data";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +35,7 @@ export default function AdminPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("wonderAttractions");
   const [isSeeding, setIsSeeding] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const adminDocRef = useMemoFirebase(() => 
     (firestore && user) ? doc(firestore, "roles_admin", user.uid) : null
@@ -98,30 +112,30 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen pt-16 bg-secondary/5 flex flex-col">
+    <main className="min-h-screen pt-16 bg-secondary/10 flex flex-col">
       <Navigation />
       
-      <div className="flex-1 flex flex-col lg:flex-row max-w-[1600px] mx-auto w-full p-6 gap-8">
-        {/* Admin Sidebar */}
-        <aside className="w-full lg:w-72 shrink-0">
+      <div className="flex-1 flex flex-col lg:flex-row max-w-[1600px] mx-auto w-full p-4 md:p-8 gap-8">
+        {/* Desktop Sidebar */}
+        <aside className="hidden lg:flex flex-col w-72 shrink-0">
           <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
           
-          <Card className="mt-6 border-primary/20 bg-primary/5 overflow-hidden">
-            <CardContent className="p-4 space-y-4">
+          <Card className="mt-6 border-primary/20 bg-primary/5 overflow-hidden rounded-3xl">
+            <CardContent className="p-6 space-y-4">
               <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest">
                 <Database size={14} />
                 Database Tools
               </div>
-              <p className="text-[10px] text-muted-foreground">
-                Push all hardcoded Rumonge features into Firestore to make them editable.
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Sync all hardcoded Rumonge features into Firestore to make them fully editable.
               </p>
               <Button 
                 onClick={handleSeedData} 
                 disabled={isSeeding}
                 variant="outline" 
-                className="w-full h-10 rounded-xl text-xs font-bold border-primary text-primary hover:bg-primary/10"
+                className="w-full h-11 rounded-xl text-xs font-bold border-primary text-primary hover:bg-primary/10"
               >
-                {isSeeding ? <Loader2 className="animate-spin" /> : <><Sparkles size={14} className="mr-2" /> Seed Initial Data</>}
+                {isSeeding ? <Loader2 className="animate-spin h-4 w-4" /> : <><Sparkles size={14} className="mr-2" /> Seed Initial Data</>}
               </Button>
             </CardContent>
           </Card>
@@ -129,40 +143,74 @@ export default function AdminPage() {
 
         {/* Management Area */}
         <section className="flex-1 min-w-0">
-          <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h1 className="text-4xl font-headline font-bold">Admin <span className="text-primary italic">Console</span></h1>
-              <p className="text-muted-foreground">Managing data for {activeTab.replace(/([A-Z])/g, ' $1').trim()}</p>
+          <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              {/* Hamburger for Mobile */}
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="lg:hidden rounded-xl border-primary/20 bg-white">
+                    <Menu className="text-primary" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 w-80">
+                  <AdminSidebar 
+                    activeTab={activeTab} 
+                    onTabChange={setActiveTab} 
+                    onClose={() => setIsMobileMenuOpen(false)}
+                  />
+                  <div className="p-6 border-t mt-auto">
+                    <Button 
+                      onClick={handleSeedData} 
+                      disabled={isSeeding}
+                      className="w-full h-12 rounded-xl"
+                    >
+                      {isSeeding ? <Loader2 className="animate-spin mr-2" /> : <Sparkles className="mr-2" />}
+                      Seed Initial Data
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              
+              <div>
+                <h1 className="text-3xl md:text-4xl font-headline font-bold">Admin <span className="text-primary italic">Console</span></h1>
+                <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
+                  <Settings2 size={14} className="text-primary" />
+                  Managing {activeTab.replace(/([A-Z])/g, ' $1').trim()}
+                </p>
+              </div>
             </div>
-            <div className="bg-primary/10 px-4 py-2 rounded-full flex items-center gap-2 text-primary font-bold text-sm">
+            
+            <div className="bg-white/50 backdrop-blur-sm border px-6 py-2 rounded-full flex items-center gap-2 text-primary font-bold text-sm shadow-sm">
               <Lock size={14} />
-              Secured Session
+              Secure Administrative Access
             </div>
           </div>
 
           {/* Quick Stats Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[
-              { label: "Total Wonders", value: wonders?.length || 0, icon: <MapPin className="text-primary" /> },
-              { label: "Reviews", value: reviews?.length || 0, icon: <MessageSquare className="text-accent" /> },
-              { label: "Bookings", value: bookings?.length || 0, icon: <ClipboardList className="text-green-600" /> },
-              { label: "Active Pulse", value: "Normal", icon: <TrendingUp className="text-blue-600" /> }
+              { label: "Wonders", value: wonders?.length || 0, icon: <MapPin className="text-primary" />, bg: "bg-primary/10" },
+              { label: "Reviews", value: reviews?.length || 0, icon: <MessageSquare className="text-accent" />, bg: "bg-accent/10" },
+              { label: "Bookings", value: bookings?.length || 0, icon: <ClipboardList className="text-blue-600" />, bg: "bg-blue-50" },
+              { label: "Pulse", value: "Active", icon: <TrendingUp className="text-green-600" />, bg: "bg-green-50" }
             ].map((stat, i) => (
-              <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-4 flex items-center justify-between">
+              <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow bg-white rounded-2xl">
+                <CardContent className="p-5 flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{stat.label}</p>
-                    <p className="text-2xl font-bold">{stat.value}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
+                    <p className="text-xl md:text-2xl font-bold">{stat.value}</p>
                   </div>
-                  <div className="bg-secondary/50 p-2 rounded-lg">
-                    {stat.icon}
+                  <div className={`${stat.bg} p-3 rounded-xl`}>
+                    {React.cloneElement(stat.icon as React.ReactElement, { size: 20 })}
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
           
-          <EntityManagement collectionName={activeTab} />
+          <div className="bg-white rounded-3xl p-1 md:p-0">
+             <EntityManagement collectionName={activeTab} />
+          </div>
         </section>
       </div>
 
