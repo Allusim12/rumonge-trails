@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Edit2, X, Save, Search, Loader2, ImageIcon, Mail, Upload, Link as LinkIcon } from "lucide-react";
+import { Plus, Trash2, Edit2, X, Save, Search, Loader2, ImageIcon, Mail, Upload, Link as LinkIcon, Cloud } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
@@ -28,6 +28,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
   const [formData, setFormData] = useState<any>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [driveUrl, setDriveUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Adjust collection name for "singleton" content stored in site_content
@@ -49,7 +50,6 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
       updatedAt: serverTimestamp(),
     };
 
-    // If it's a singleton document like 'hero' or 'office'
     if (actualCollection === "site_content") {
       const docId = isOffice ? "office" : "hero";
       setDocumentNonBlocking(doc(firestore, "site_content", docId), data, { merge: true });
@@ -79,7 +79,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
       setFormData((prev: any) => ({
         ...prev,
         imageUrl: downloadURL,
-        url: downloadURL // Handle both common image key names
+        url: downloadURL
       }));
       
       toast({ title: "Upload Complete", description: "Image stored and linked." });
@@ -91,10 +91,33 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
     }
   };
 
+  const handleGoogleDriveConversion = () => {
+    if (!driveUrl) return;
+
+    // Extract File ID from common Google Drive link formats
+    const fileIdMatch = driveUrl.match(/[-\w]{25,}/);
+    if (fileIdMatch && fileIdMatch[0]) {
+      const fileId = fileIdMatch[0];
+      // Use the preview URL format which works well with Next.js Image
+      const directUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+      
+      setFormData((prev: any) => ({
+        ...prev,
+        imageUrl: directUrl,
+        url: directUrl
+      }));
+      setDriveUrl("");
+      toast({ title: "Link Converted", description: "Google Drive link processed successfully." });
+    } else {
+      toast({ variant: "destructive", title: "Invalid Link", description: "Could not find a valid File ID in the URL." });
+    }
+  };
+
   const resetForm = () => {
     setFormData({});
     setEditingId(null);
     setIsAdding(false);
+    setDriveUrl("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -213,9 +236,10 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                       </div>
 
                       <Tabs defaultValue="upload" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 rounded-xl">
-                          <TabsTrigger value="upload" className="rounded-lg"><Upload size={14} className="mr-2" /> Upload</TabsTrigger>
-                          <TabsTrigger value="link" className="rounded-lg"><LinkIcon size={14} className="mr-2" /> Link</TabsTrigger>
+                        <TabsList className="grid w-full grid-cols-3 rounded-xl h-auto p-1">
+                          <TabsTrigger value="upload" className="rounded-lg text-[10px] py-2"><Upload size={12} className="mr-1" /> File</TabsTrigger>
+                          <TabsTrigger value="link" className="rounded-lg text-[10px] py-2"><LinkIcon size={12} className="mr-1" /> URL</TabsTrigger>
+                          <TabsTrigger value="drive" className="rounded-lg text-[10px] py-2"><Cloud size={12} className="mr-1" /> Drive</TabsTrigger>
                         </TabsList>
                         <TabsContent value="upload" className="pt-2">
                           <Input 
@@ -223,7 +247,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                             accept="image/*" 
                             onChange={handleFileUpload}
                             ref={fileInputRef}
-                            className="rounded-xl h-12"
+                            className="rounded-xl h-10 text-xs"
                             disabled={isUploading}
                           />
                         </TabsContent>
@@ -231,9 +255,25 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                           <Input 
                             value={formData.imageUrl || formData.url || ""} 
                             onChange={(e) => setFormData({...formData, imageUrl: e.target.value, url: e.target.value})}
-                            placeholder="https://..."
-                            className="rounded-xl h-12"
+                            placeholder="Direct image URL..."
+                            className="rounded-xl h-10 text-xs"
                           />
+                        </TabsContent>
+                        <TabsContent value="drive" className="pt-2 space-y-2">
+                          <div className="flex gap-2">
+                            <Input 
+                              value={driveUrl} 
+                              onChange={(e) => setDriveUrl(e.target.value)}
+                              placeholder="Paste Drive Share Link..."
+                              className="rounded-xl h-10 text-xs flex-1"
+                            />
+                            <Button type="button" size="sm" onClick={handleGoogleDriveConversion} className="rounded-xl">
+                              Add
+                            </Button>
+                          </div>
+                          <p className="text-[9px] text-muted-foreground italic leading-tight">
+                            Make sure the Google Drive file is shared as "Anyone with the link".
+                          </p>
                         </TabsContent>
                       </Tabs>
                     </div>
