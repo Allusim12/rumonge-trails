@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Compass, User, ShieldCheck } from "lucide-react";
+import { Menu, X, Compass, User, ShieldCheck, Landmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
@@ -15,6 +15,7 @@ const NavLinks = [
   { name: "Transport", href: "/transport" },
   { name: "Itinerary", href: "/itinerary" },
   { name: "Community", href: "/community" },
+  { name: "Office", href: "/office" },
 ];
 
 export function Navigation() {
