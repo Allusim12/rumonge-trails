@@ -2,11 +2,12 @@
 
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { MapPin, Camera, Star, Search, Filter, Loader2 } from "lucide-react";
+import { MapPin, Star, Search, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
@@ -67,7 +68,6 @@ export function AttractionsGrid() {
 
   const allWonders = useMemo(() => {
     const combined = [...(dbWonders || []), ...staticWonders];
-    // Remove duplicates by name if any
     return combined.filter((v, i, a) => a.findIndex(t => (t.name === v.name)) === i);
   }, [dbWonders]);
 
@@ -95,7 +95,6 @@ export function AttractionsGrid() {
           </div>
         </div>
 
-        {/* Search and Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-12 items-center">
           <div className="relative w-full md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -130,7 +129,7 @@ export function AttractionsGrid() {
           </div>
         ) : filteredWonders.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {filteredWonders.map((wonder, index) => {
+            {filteredWonders.map((wonder) => {
               const imgData = PlaceHolderImages.find(img => img.id === wonder.image || img.id === "rumonge-hero");
               return (
                 <Card key={wonder.id} className="group border-none shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden bg-background">
@@ -169,7 +168,12 @@ export function AttractionsGrid() {
                         <Star size={14} className="fill-yellow-500 text-yellow-500" />
                         <span className="text-sm font-bold">{wonder.rating || "4.5"}</span>
                       </div>
-                      <button className="text-accent text-sm font-bold hover:underline">Explore More</button>
+                      <Link 
+                        href={`/wonders/${wonder.id}`}
+                        className="text-accent text-sm font-bold hover:underline"
+                      >
+                        Explore More
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>
