@@ -56,7 +56,7 @@ export function Navigation() {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden xl:flex items-center gap-6">
+        <div className="hidden lg:flex items-center gap-6">
           {NavLinks.map((link) => (
             <Link
               key={link.name}
@@ -105,7 +105,7 @@ export function Navigation() {
 
         {/* Mobile Menu Toggle */}
         <button
-          className={cn("xl:hidden p-2", scrolled ? "text-foreground" : "text-white")}
+          className={cn("lg:hidden p-2", scrolled ? "text-foreground" : "text-white")}
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle menu"
         >
@@ -116,7 +116,7 @@ export function Navigation() {
       {/* Mobile Nav */}
       <div
         className={cn(
-          "fixed inset-0 top-[64px] bg-background z-40 xl:hidden transition-transform duration-300 ease-in-out transform",
+          "fixed inset-0 top-[64px] bg-background z-40 lg:hidden transition-transform duration-300 ease-in-out transform",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
