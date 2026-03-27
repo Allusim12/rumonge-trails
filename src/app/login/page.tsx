@@ -1,42 +1,60 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useAuth } from "@/firebase";
+import { useAuth, useUser } from "@/firebase";
 import { initiateEmailSignIn, initiateEmailSignUp, initiateAnonymousSignIn } from "@/firebase/non-blocking-login";
-import { Compass, LogIn, UserPlus, Ghost } from "lucide-react";
+import { Compass, LogIn, UserPlus, Ghost, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const { auth } = useAuth();
+  const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+
+  // Handle redirect after successful login
+  useEffect(() => {
+    if (user && !isUserLoading) {
+      toast({
+        title: "Welcome!",
+        description: isRegistering ? "Account created successfully." : "Signed in successfully.",
+      });
+      router.push("/profile");
+    }
+  }, [user, isUserLoading, router, isRegistering, toast]);
 
   const handleAuth = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    if (!auth || isSubmitting) return;
 
+    setIsSubmitting(true);
     if (isRegistering) {
       initiateEmailSignUp(auth, email, password);
     } else {
       initiateEmailSignIn(auth, email, password);
     }
-    // Redirect to home - in a real app you'd wait for success, 
-    // but we use non-blocking pattern here.
-    router.push("/");
+    
+    // We don't redirect here anymore. The useEffect above handles it once 'user' is set.
+    // We set a timeout to reset the submitting state in case of failure (since non-blocking doesn't await)
+    setTimeout(() => setIsSubmitting(false), 5000);
   };
 
   const handleAnonymous = () => {
-    if (!auth) return;
+    if (!auth || isSubmitting) return;
+    setIsSubmitting(true);
     initiateAnonymousSignIn(auth);
-    router.push("/");
+    setTimeout(() => setIsSubmitting(false), 5000);
   };
 
   return (
@@ -66,6 +84,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="rounded-xl"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -76,11 +95,22 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="rounded-xl"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
-              <Button type="submit" className="w-full h-12 rounded-xl font-bold flex gap-2">
-                {isRegistering ? <UserPlus size={20} /> : <LogIn size={20} />}
-                {isRegistering ? "Create Account" : "Sign In"}
+              <Button 
+                type="submit" 
+                className="w-full h-12 rounded-xl font-bold flex gap-2"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : (
+                  <>
+                    {isRegistering ? <UserPlus size={20} /> : <LogIn size={20} />}
+                    {isRegistering ? "Create Account" : "Sign In"}
+                  </>
+                )}
               </Button>
             </form>
 
@@ -98,14 +128,23 @@ export default function LoginPage() {
                 variant="outline" 
                 className="w-full h-12 rounded-xl font-bold flex gap-2"
                 onClick={handleAnonymous}
+                disabled={isSubmitting}
               >
-                <Ghost size={20} />
-                Explore Anonymously
+                {isSubmitting ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : (
+                  <>
+                    <Ghost size={20} />
+                    Explore Anonymously
+                  </>
+                )}
               </Button>
               
               <button 
+                type="button"
                 onClick={() => setIsRegistering(!isRegistering)}
                 className="w-full text-sm text-primary font-bold hover:underline"
+                disabled={isSubmitting}
               >
                 {isRegistering ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
               </button>
