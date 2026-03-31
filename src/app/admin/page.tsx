@@ -8,6 +8,8 @@ import { useUser, useFirestore, useDoc, useMemoFirebase, useCollection } from "@
 import { doc, collection } from "firebase/firestore";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { EntityManagement } from "@/components/admin/EntityManagement";
+import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
+import { AIStudio } from "@/components/admin/AIStudio";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -22,7 +24,9 @@ import {
   ClipboardList, 
   TrendingUp,
   Menu,
-  Settings2
+  Settings2,
+  BarChart3,
+  Wand2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { seedInitialData } from "@/lib/seed-data";
@@ -33,7 +37,7 @@ export default function AdminPage() {
   const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("wonderAttractions");
+  const [activeTab, setActiveTab] = useState("analytics");
   const [isSeeding, setIsSeeding] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -145,7 +149,7 @@ export default function AdminPage() {
         <section className="flex-1 min-w-0">
           <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              {/* Hamburger for Mobile - Ensuring background is NOT transparent */}
+              {/* Hamburger for Mobile */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button 
@@ -179,7 +183,7 @@ export default function AdminPage() {
                 <h1 className="text-3xl md:text-4xl font-headline font-bold">Admin <span className="text-primary italic">Console</span></h1>
                 <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
                   <Settings2 size={14} className="text-primary" />
-                  Managing {activeTab.replace(/([A-Z])/g, ' $1').trim()}
+                  {activeTab === 'analytics' ? 'Performance Insights' : activeTab === 'ai-studio' ? 'AI Marketing Studio' : `Managing ${activeTab.replace(/([A-Z])/g, ' $1').trim()}`}
                 </p>
               </div>
             </div>
@@ -190,31 +194,40 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Quick Stats Overview */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {[
-              { label: "Wonders", value: wonders?.length || 0, icon: <MapPin className="text-primary" />, bg: "bg-primary/10" },
-              { label: "Reviews", value: reviews?.length || 0, icon: <MessageSquare className="text-accent" />, bg: "bg-accent/10" },
-              { label: "Bookings", value: bookings?.length || 0, icon: <ClipboardList className="text-blue-600" />, bg: "bg-blue-50" },
-              { label: "Pulse", value: "Active", icon: <TrendingUp className="text-green-600" />, bg: "bg-green-50" }
-            ].map((stat, i) => (
-              <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow bg-white rounded-2xl">
-                <CardContent className="p-5 flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
-                    <p className="text-xl md:text-2xl font-bold">{stat.value}</p>
-                  </div>
-                  <div className={`${stat.bg} p-3 rounded-xl`}>
-                    {React.cloneElement(stat.icon as React.ReactElement, { size: 20 })}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          <div className="bg-white rounded-3xl p-1 md:p-0 shadow-sm border overflow-hidden">
-             <EntityManagement collectionName={activeTab} />
-          </div>
+          {/* Tab Selection Content */}
+          {activeTab === "analytics" ? (
+            <AdminAnalytics />
+          ) : activeTab === "ai-studio" ? (
+            <AIStudio />
+          ) : (
+            <>
+              {/* Quick Stats Overview - Only on management views */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                {[
+                  { label: "Wonders", value: wonders?.length || 0, icon: <MapPin className="text-primary" />, bg: "bg-primary/10" },
+                  { label: "Reviews", value: reviews?.length || 0, icon: <MessageSquare className="text-accent" />, bg: "bg-accent/10" },
+                  { label: "Bookings", value: bookings?.length || 0, icon: <ClipboardList className="text-blue-600" />, bg: "bg-blue-50" },
+                  { label: "Pulse", value: "Active", icon: <TrendingUp className="text-green-600" />, bg: "bg-green-50" }
+                ].map((stat, i) => (
+                  <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow bg-white rounded-2xl">
+                    <CardContent className="p-5 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
+                        <p className="text-xl md:text-2xl font-bold">{stat.value}</p>
+                      </div>
+                      <div className={`${stat.bg} p-3 rounded-xl`}>
+                        {React.cloneElement(stat.icon as React.ReactElement, { size: 20 })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              <div className="bg-white rounded-3xl p-1 md:p-0 shadow-sm border overflow-hidden">
+                <EntityManagement collectionName={activeTab} />
+              </div>
+            </>
+          )}
         </section>
       </div>
 

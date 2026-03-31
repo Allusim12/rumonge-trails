@@ -19,7 +19,9 @@ import {
   Newspaper,
   ClipboardList,
   LayoutDashboard,
-  ChevronRight
+  ChevronRight,
+  BarChart3,
+  Wand2
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -29,6 +31,13 @@ interface AdminSidebarProps {
 }
 
 const groups = [
+  {
+    label: "Intelligence",
+    items: [
+      { id: "analytics", label: "Analytics", icon: BarChart3 },
+      { id: "ai-studio", label: "AI Marketing Studio", icon: Wand2 },
+    ]
+  },
   {
     label: "Site Presence",
     items: [
