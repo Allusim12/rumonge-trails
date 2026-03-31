@@ -3,7 +3,10 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
 
+const siteUrl = 'https://rumongetrails.bi';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: 'Rumonge Cultural Trails | Discover the Heart of Burundi',
     template: '%s | Rumonge Cultural Trails',
@@ -25,9 +28,11 @@ export const metadata: Metadata = {
     'Niyibituronsa Hotel',
     'Mawimbi Hotel',
     'SunRise Hotel',
+    'Visit Burundi',
+    'Eco-tourism Africa',
   ],
   authors: [{ name: 'Rumonge Cultural Trails' }],
-  creator: 'Rumonge Cultural Trails',
+  creator: 'Rumonge Cultural Trails Office of the Administrator',
   publisher: 'Rumonge Cultural Trails',
   formatDetection: {
     email: false,
@@ -37,8 +42,16 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Rumonge Cultural Trails | Discover Burundi',
     description: 'Breathtaking landscapes, rich traditions, and warm hospitality on the shores of Lake Tanganyika.',
-    url: 'https://rumongetrails.bi',
+    url: siteUrl,
     siteName: 'Rumonge Cultural Trails',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Beautiful sunrise over Lake Tanganyika in Rumonge',
+      },
+    ],
     locale: 'en_US',
     type: 'website',
   },
@@ -46,6 +59,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Rumonge Cultural Trails | Discover Burundi',
     description: 'The ultimate guide to exploring the natural wonders and cultural heritage of Rumonge.',
+    creator: '@RumongeTrails',
+    images: ['/og-image.jpg'],
   },
   robots: {
     index: true,
@@ -57,6 +72,9 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
+  },
+  verification: {
+    google: 'googled19c5db8dfd51a72',
   },
 };
 
