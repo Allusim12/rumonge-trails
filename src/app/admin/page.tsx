@@ -145,14 +145,18 @@ export default function AdminPage() {
         <section className="flex-1 min-w-0">
           <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              {/* Hamburger for Mobile */}
+              {/* Hamburger for Mobile - Ensuring background is NOT transparent */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="lg:hidden rounded-xl border-primary/20 bg-white">
-                    <Menu className="text-primary" />
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="lg:hidden rounded-xl border-primary bg-white shadow-md hover:bg-white active:scale-95 transition-all"
+                  >
+                    <Menu className="text-primary h-6 w-6" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-80">
+                <SheetContent side="left" className="p-0 w-80 bg-white shadow-2xl border-r">
                   <AdminSidebar 
                     activeTab={activeTab} 
                     onTabChange={setActiveTab} 
@@ -180,7 +184,7 @@ export default function AdminPage() {
               </div>
             </div>
             
-            <div className="bg-white/50 backdrop-blur-sm border px-6 py-2 rounded-full flex items-center gap-2 text-primary font-bold text-sm shadow-sm">
+            <div className="bg-white/80 backdrop-blur-sm border px-6 py-2 rounded-full flex items-center gap-2 text-primary font-bold text-sm shadow-sm">
               <Lock size={14} />
               Secure Administrative Access
             </div>
@@ -208,7 +212,7 @@ export default function AdminPage() {
             ))}
           </div>
           
-          <div className="bg-white rounded-3xl p-1 md:p-0">
+          <div className="bg-white rounded-3xl p-1 md:p-0 shadow-sm border overflow-hidden">
              <EntityManagement collectionName={activeTab} />
           </div>
         </section>

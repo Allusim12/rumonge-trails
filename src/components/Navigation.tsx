@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -119,7 +120,12 @@ export function Navigation() {
 
         {/* Mobile Menu Toggle */}
         <button
-          className={cn("md:hidden p-2", isNavLight ? "text-foreground" : "text-white")}
+          className={cn(
+            "md:hidden p-2 rounded-xl transition-all border border-transparent",
+            isNavLight 
+              ? "text-foreground hover:bg-secondary border-border/50" 
+              : "text-white bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20"
+          )}
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
