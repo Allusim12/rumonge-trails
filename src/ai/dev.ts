@@ -7,3 +7,4 @@ import '@/ai/flows/local-guide.ts';
 import '@/ai/flows/kirundi-tts.ts';
 import '@/ai/flows/community-buzz.ts';
 import '@/ai/flows/generate-promo-video.ts';
+import '@/ai/flows/sentiment-analysis.ts';
