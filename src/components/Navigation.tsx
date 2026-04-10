@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -73,18 +74,29 @@ export function Navigation() {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-6">
           <div className="flex gap-4">
-            {NavLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={cn(
-                  "font-body font-bold transition-colors text-[10px] uppercase tracking-widest",
-                  isNavLight ? "text-foreground/70 hover:text-primary" : "text-white/80 hover:text-white"
-                )}
-              >
-                {link.name}
-              </Link>
-            ))}
+            {NavLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={cn(
+                    "font-body font-bold transition-all text-[10px] uppercase tracking-widest relative pb-1",
+                    isNavLight 
+                      ? isActive ? "text-primary" : "text-foreground/70 hover:text-primary"
+                      : isActive ? "text-white" : "text-white/80 hover:text-white"
+                  )}
+                >
+                  {link.name}
+                  {isActive && (
+                    <span className={cn(
+                      "absolute bottom-0 left-0 right-0 h-0.5 rounded-full animate-in fade-in slide-in-from-left-1 duration-500",
+                      isNavLight ? "bg-primary" : "bg-white"
+                    )} />
+                  )}
+                </Link>
+              );
+            })}
           </div>
           
           <div className="flex items-center gap-3 border-l pl-6 ml-2 border-muted/30">
@@ -147,7 +159,10 @@ export function Navigation() {
               key={link.name}
               href={link.href}
               onClick={() => setIsOpen(false)}
-              className="font-headline text-3xl font-bold text-foreground hover:text-primary"
+              className={cn(
+                "font-headline text-3xl font-bold transition-colors",
+                pathname === link.href ? "text-primary" : "text-foreground hover:text-primary"
+              )}
             >
               {link.name}
             </Link>

@@ -21,7 +21,8 @@ import {
   LayoutDashboard,
   ChevronRight,
   BarChart3,
-  Wand2
+  Wand2,
+  Inbox
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -49,6 +50,7 @@ const groups = [
   {
     label: "Engagement",
     items: [
+      { id: "site_inquiries", label: "Office Inquiries", icon: Inbox },
       { id: "trendingUpdates", label: "Trending News", icon: Newspaper },
       { id: "bookingRequests", label: "Booking Requests", icon: ClipboardList },
       { id: "reviews", label: "Traveler Reviews", icon: MessageSquare },

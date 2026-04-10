@@ -86,6 +86,18 @@
         "mediaType": { "type": "string", "enum": ["nature", "culture", "leisure", "food"] },
         "uploadedAt": { "type": "string" }
       }
+    },
+    "Inquiry": {
+      "title": "Inquiry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "sentAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -110,6 +122,7 @@
     },
     "/wonderAttractions/{wonderAttractionId}": { "schema": "WonderAttraction", "description": "Attractions." },
     "/bookingRequests/{requestId}": { "schema": "BookingRequest", "description": "Visitor booking interests." },
-    "/mediaAssets/{assetId}": { "schema": "MediaAsset", "description": "Gallery images." }
+    "/mediaAssets/{assetId}": { "schema": "MediaAsset", "description": "Gallery images." },
+    "/site_inquiries/{inquiryId}": { "schema": "Inquiry", "description": "General office inquiries." }
   }
 }

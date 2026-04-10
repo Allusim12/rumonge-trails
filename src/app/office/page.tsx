@@ -1,24 +1,53 @@
+
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ChatGuide } from "@/components/ChatGuide";
-import { Building2, Landmark, ShieldCheck, MapPin, Mail, Phone, Info, Loader2, FileText } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, Landmark, ShieldCheck, MapPin, Mail, Phone, Info, Loader2, FileText, Send } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { doc, collection, serverTimestamp } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useToast } from "@/hooks/use-toast";
 
 export default function OfficePage() {
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inquiryForm, setInquiryForm] = useState({ name: "", email: "", subject: "", message: "" });
 
   const officeDocRef = useMemoFirebase(() => 
     firestore ? doc(firestore, "site_content", "office") : null
   , [firestore]);
 
   const { data: officeData, isLoading } = useDoc(officeDocRef);
+
+  const handleSubmitInquiry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!firestore) return;
+
+    setIsSubmitting(true);
+    try {
+      await addDocumentNonBlocking(collection(firestore, "site_inquiries"), {
+        ...inquiryForm,
+        sentAt: serverTimestamp(),
+        status: "New"
+      });
+      setInquiryForm({ name: "", email: "", subject: "", message: "" });
+      toast({
+        title: "Message Sent",
+        description: "The Commune Office has received your inquiry.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Fallback defaults
   const content = {
@@ -61,7 +90,7 @@ export default function OfficePage() {
       <section className="py-24 px-6 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           
-          {/* Administrator Spotlight */}
+          {/* Administrator Spotlight & Inquiry */}
           <div className="lg:col-span-7 space-y-12">
             <div className="flex flex-col md:flex-row gap-8 items-center md:items-start bg-white p-8 rounded-[2.5rem] shadow-xl border border-primary/10">
               <div className="relative w-48 h-48 rounded-3xl overflow-hidden shrink-0 shadow-lg border-4 border-white">
@@ -87,32 +116,72 @@ export default function OfficePage() {
               </div>
             </div>
 
-            <div className="space-y-8">
-              <h3 className="font-headline text-3xl font-bold flex items-center gap-3">
-                <Info className="text-primary" />
-                Office <span className="text-primary italic">Responsibilities</span>
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[
-                  { title: "Public Service", desc: "Coordinating local administrative services and civil status management." },
-                  { title: "Economic Growth", desc: "Supporting local industries, markets, and the vital palm oil sector." },
-                  { title: "Heritage Support", desc: "Active promotion of the Rumonge Cultural Trails and tourist sites." },
-                  { title: "Infrastructure", desc: "Managing the commune's roads, public spaces, and lakeside zones." }
-                ].map((item, i) => (
-                  <Card key={i} className="border-none shadow-sm bg-white hover:shadow-md transition-shadow rounded-2xl">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-bold text-primary">{item.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{item.desc}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            {/* Official Inquiry Form */}
+            <Card className="border-none shadow-2xl bg-white overflow-hidden rounded-[2.5rem]">
+              <div className="h-2 bg-primary" />
+              <CardHeader className="p-10">
+                <CardTitle className="font-headline text-3xl">Direct <span className="text-primary italic">Inquiry</span></CardTitle>
+                <CardDescription>Send an official message to the Office of the Administrator.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-10 pt-0">
+                <form onSubmit={handleSubmitInquiry} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Your Name</label>
+                      <Input 
+                        required
+                        placeholder="John Doe"
+                        className="rounded-2xl h-12 bg-secondary/20 border-none"
+                        value={inquiryForm.name}
+                        onChange={(e) => setInquiryForm({...inquiryForm, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Email Address</label>
+                      <Input 
+                        required
+                        type="email"
+                        placeholder="john@example.com"
+                        className="rounded-2xl h-12 bg-secondary/20 border-none"
+                        value={inquiryForm.email}
+                        onChange={(e) => setInquiryForm({...inquiryForm, email: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Subject</label>
+                    <Input 
+                      required
+                      placeholder="e.g. Group Visit Notification"
+                      className="rounded-2xl h-12 bg-secondary/20 border-none"
+                      value={inquiryForm.subject}
+                      onChange={(e) => setInquiryForm({...inquiryForm, subject: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Message</label>
+                    <Textarea 
+                      required
+                      placeholder="How can we assist you?"
+                      className="rounded-2xl min-h-[150px] bg-secondary/20 border-none"
+                      value={inquiryForm.message}
+                      onChange={(e) => setInquiryForm({...inquiryForm, message: e.target.value})}
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="w-full h-14 rounded-2xl font-bold text-lg shadow-lg hover:scale-[1.02] transition-transform"
+                  >
+                    {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2" size={20} />}
+                    Submit Official Message
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Contact & Registration */}
+          {/* Contact & Registration Sidebar */}
           <aside className="lg:col-span-5 space-y-8">
             <Card className="border-none shadow-2xl bg-white overflow-hidden rounded-[2rem]">
               <CardHeader className="bg-primary/5 p-8 border-b">
@@ -179,10 +248,10 @@ export default function OfficePage() {
                   International groups and organizations are encouraged to notify the office of their visit to ensure a safe and supportive experience.
                 </p>
                 <div className="p-6 bg-white rounded-2xl border border-accent/20 shadow-sm">
-                  <h4 className="font-bold mb-2 text-foreground">Official Group Form</h4>
-                  <p className="text-sm text-muted-foreground mb-6">Download and complete this form before your arrival in Rumonge.</p>
-                  <Button className="w-full h-12 rounded-xl font-bold bg-accent hover:bg-accent/90 text-white shadow-lg">
-                    Download Group Form
+                  <h4 className="font-bold mb-2 text-foreground">Registration Info</h4>
+                  <p className="text-sm text-muted-foreground mb-6">Use the Inquiry form to notify us of your planned group arrival. Include dates and size.</p>
+                  <Button variant="outline" className="w-full h-12 rounded-xl font-bold border-accent text-accent hover:bg-accent/10">
+                    Read Travel Protocols
                   </Button>
                 </div>
               </CardContent>
