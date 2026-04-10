@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useStorage } from "@/firebase";
 import { collection, query, orderBy, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -29,7 +29,12 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [driveUrl, setDriveUrl] = useState("");
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Adjust collection name for "singleton" content stored in site_content
   const isOffice = collectionName === "site_content_office";
@@ -341,7 +346,7 @@ export function EntityManagement({ collectionName }: EntityManagementProps) {
                 <TableCell className="py-6">
                   {collectionName === 'newsletter_subscriptions' ? (
                      <span className="text-muted-foreground text-xs italic">
-                        Subscribed on {entity.subscribedAt?.seconds ? new Date(entity.subscribedAt.seconds * 1000).toLocaleDateString() : 'Recent'}
+                        Subscribed on {mounted && entity.subscribedAt?.seconds ? new Date(entity.subscribedAt.seconds * 1000).toLocaleDateString() : 'Recent'}
                      </span>
                   ) : (
                     <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold uppercase">

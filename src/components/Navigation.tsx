@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -28,9 +27,19 @@ const DARK_HERO_PAGES = ["/", "/dining", "/news", "/office", "/community", "/tra
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { user } = useUser();
   const firestore = useFirestore();
+
+  useEffect(() => {
+    setMounted(true);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Determine if the current page has a dark header background initially
   const hasDarkHero = DARK_HERO_PAGES.includes(pathname) || pathname.startsWith("/wonders/") || pathname.startsWith("/stays/");
@@ -40,14 +49,6 @@ export function Navigation() {
   , [firestore, user?.uid]);
 
   const { data: adminRole } = useDoc(adminDocRef);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // Visual logic based on scroll and page theme
   const isNavLight = scrolled || !hasDarkHero;
@@ -87,7 +88,7 @@ export function Navigation() {
           </div>
           
           <div className="flex items-center gap-3 border-l pl-6 ml-2 border-muted/30">
-            {adminRole && (
+            {mounted && adminRole && (
               <Link
                 href="/admin"
                 className={cn(
@@ -100,21 +101,21 @@ export function Navigation() {
               </Link>
             )}
 
-            {user ? (
+            {mounted && user ? (
               <Link
                 href="/profile"
                 className="bg-primary text-primary-foreground p-2 rounded-full hover:scale-105 transition-all shadow-md"
               >
                 <User size={18} />
               </Link>
-            ) : (
+            ) : mounted ? (
               <Link
                 href="/login"
                 className="bg-primary text-primary-foreground px-5 py-2 rounded-full font-bold text-xs hover:bg-primary/90 transition-all shadow-md"
               >
                 Login
               </Link>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -127,6 +128,7 @@ export function Navigation() {
               : "text-white bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20"
           )}
           onClick={() => setIsOpen(!isOpen)}
+          suppressHydrationWarning
         >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
@@ -152,7 +154,7 @@ export function Navigation() {
           ))}
           
           <div className="w-full pt-8 border-t flex flex-col gap-4 items-center">
-            {adminRole && (
+            {mounted && adminRole && (
               <Link
                 href="/admin"
                 onClick={() => setIsOpen(false)}
@@ -162,13 +164,15 @@ export function Navigation() {
               </Link>
             )}
 
-            <Link
-              href={user ? "/profile" : "/login"}
-              onClick={() => setIsOpen(false)}
-              className="w-full bg-primary text-primary-foreground text-center py-4 rounded-2xl font-bold text-xl shadow-lg"
-            >
-              {user ? "Go to Profile" : "Login / Join"}
-            </Link>
+            {mounted && (
+              <Link
+                href={user ? "/profile" : "/login"}
+                onClick={() => setIsOpen(false)}
+                className="w-full bg-primary text-primary-foreground text-center py-4 rounded-2xl font-bold text-xl shadow-lg"
+              >
+                {user ? "Go to Profile" : "Login / Join"}
+              </Link>
+            )}
           </div>
         </div>
       </div>

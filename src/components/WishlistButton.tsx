@@ -21,6 +21,11 @@ export function WishlistButton({ entityId, entityType, entityName, className }: 
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const wishlistQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -31,7 +36,7 @@ export function WishlistButton({ entityId, entityType, entityName, className }: 
   }, [firestore, user?.uid, entityId]);
 
   const { data: savedItems } = useCollection(wishlistQuery);
-  const isSaved = savedItems && savedItems.length > 0;
+  const isSaved = mounted && savedItems && savedItems.length > 0;
 
   const handleToggle = (e: React.MouseEvent) => {
     e.preventDefault();
