@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFirestore, useCollection, useUser, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, doc, updateDoc, arrayUnion, arrayRemove, serverTimestamp } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -19,6 +18,11 @@ export function TrendingList() {
   const { user } = useUser();
   const [commentingOn, setCommentingOn] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const newsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -71,7 +75,7 @@ export function TrendingList() {
           </div>
           <CardHeader>
             <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-2">
-              {post.createdAt?.seconds ? format(new Date(post.createdAt.seconds * 1000), "PPP") : "Just now"}
+              {mounted && post.createdAt?.seconds ? format(new Date(post.createdAt.seconds * 1000), "PPP") : "Just now"}
             </div>
             <CardTitle className="font-headline text-3xl group-hover:text-primary transition-colors">{post.title}</CardTitle>
           </CardHeader>

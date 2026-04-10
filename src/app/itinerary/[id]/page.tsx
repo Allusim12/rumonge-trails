@@ -1,7 +1,6 @@
-
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -18,6 +17,11 @@ export default function ItineraryDetailPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const itineraryRef = useMemoFirebase(() => 
     (firestore && user) ? doc(firestore, "users", user.uid, "itineraries", id as string) : null
@@ -61,7 +65,7 @@ export default function ItineraryDetailPage() {
               <ArrowLeft size={14} /> Back to Profile
             </Link>
             <h1 className="font-headline text-4xl md:text-5xl font-bold">{itinerary.name}</h1>
-            <p className="text-muted-foreground mt-2">Crafted by Amahoro AI on {itinerary.createdAt?.seconds ? new Date(itinerary.createdAt.seconds * 1000).toLocaleDateString() : 'Recently'}</p>
+            <p className="text-muted-foreground mt-2">Crafted by Amahoro AI on {mounted && itinerary.createdAt?.seconds ? new Date(itinerary.createdAt.seconds * 1000).toLocaleDateString() : 'Recently'}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" className="rounded-full">

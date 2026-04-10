@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, orderBy, limit } from "firebase/firestore";
 import { format } from "date-fns";
@@ -9,6 +9,11 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export function EventsList() {
   const firestore = useFirestore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const eventsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -64,10 +69,10 @@ export function EventsList() {
             <CardContent className="p-0 flex flex-col sm:flex-row">
               <div className="bg-primary text-white p-6 sm:w-32 flex flex-col items-center justify-center text-center">
                 <span className="text-4xl font-headline font-bold">
-                  {format(startDate, "dd")}
+                  {mounted ? format(startDate, "dd") : "--"}
                 </span>
                 <span className="text-xs uppercase font-bold tracking-widest opacity-80">
-                  {format(startDate, "MMM")}
+                  {mounted ? format(startDate, "MMM") : "..."}
                 </span>
               </div>
               <div className="p-6 flex-1 bg-white">

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -24,6 +23,11 @@ export default function CommunityPage() {
   const [isPosting, setIsPosting] = useState(false);
   const [buzz, setBuzz] = useState<CommunityBuzzOutput | null>(null);
   const [isBuzzLoading, setIsBuzzLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const reviewsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -184,7 +188,7 @@ export default function CommunityPage() {
                         <div className="mt-6 pt-6 border-t flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">
                           <span>Verified Traveler</span>
                           <span>
-                            {review.createdAt?.seconds 
+                            {mounted && review.createdAt?.seconds 
                               ? format(new Date(review.createdAt.seconds * 1000), "PPP")
                               : "Recently Posted"}
                           </span>
